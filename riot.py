@@ -3,12 +3,14 @@ import os
 import dotenv
 import aiohttp
 
-dotenv.load_dotenv()
 
 # ========== Configuration ==========
 # we request data from riot. riot looks at headers to check for access.
 # riot looks for "X-Riot-Token"
+dotenv.load_dotenv()
 RIOT_TOKEN = os.getenv("RIOT_TOKEN")
+if RIOT_TOKEN is None: raise ValueError("RIOT_TOKEN not found in .env file.")
+
 HEADERS = {
     "X-Riot-Token" : RIOT_TOKEN
 }

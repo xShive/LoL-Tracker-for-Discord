@@ -80,3 +80,24 @@ async def get_puuid(game_name: str, tag_line: str, region_code: str) -> str | No
             else:
                 print(f"Error: {response.status}")
                 return None
+            
+
+async def get_match_id(puuid: str, region: str) -> str | None:
+    region_url = REGIONS.get(region)
+    if region_url is None: return
+
+    full_url = f"{region_url}/lol/match/v5/matches/by-puuid/{puuid}/ids"
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(full_url, headers=HEADERS) as response:
+            if response.status == 200:
+                data = await response.json()
+                
+                if len(data) > 0:
+                    return data[0]
+                
+                return None
+            
+            else:
+                print(f"Error: {response.status}")
+                return None

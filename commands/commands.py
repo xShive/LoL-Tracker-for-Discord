@@ -2,7 +2,7 @@
 import discord
 
 from discord import app_commands
-from riot import get_puuid
+from riot import get_puuid, get_match_id
 
 
 # ========== Commands registry ==========
@@ -17,10 +17,16 @@ def register_commands(tree):
 
         name_parts = riot_name.split("#")
 
-        puuid = get_puuid(name_parts[0], name_parts[1], region)
+        puuid = await get_puuid(name_parts[0], name_parts[1], region)
         if puuid is None:
             await interaction.edit_original_response(content="Unexpected error.")
+            return
+        
+        match_id = await get_match_id(puuid, region)
+        if match_id is None:
+            await interaction.edit_original_response(content="Unexpected error.")
+            return
 
-        await interaction.edit_original_response(content=f"Your PUUID: {puuid}")
+        await interaction.edit_original_response(content=f"Your latest match ID: {match_id}")
         return
 

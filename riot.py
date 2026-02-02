@@ -2,6 +2,7 @@
 import os
 import dotenv
 import aiohttp
+from typing import Any, Optional
 
 
 # ========== Configuration ==========
@@ -15,8 +16,8 @@ HEADERS = {
     "X-Riot-Token" : RIOT_TOKEN
 }
 
-# step 1: region. jayden is from a different server so fuck.
-# (this is used to build the URL)
+RegionCode = str
+
 REGIONS = {
     # AMERICAS
     "NA": "https://americas.api.riotgames.com",
@@ -44,37 +45,34 @@ REGIONS = {
     "VN": "https://sea.api.riotgames.com",
 }
 
-# STEPS: PUUID -> MATCH ID -> DATA
-# URL: REGION -> COMMAND -> INPUT
-
 
 # ========== Functions ==========
-async def get_puuid(game_name: str, tag_line: str, region_code: str) -> str | None:
-    # 1. REGION URL
+async def get_puuid(
+    game_name: str,
+    tag_line: str,
+    region_code: RegionCode
+) -> Optional[str]:
+    """Retrieves PUUID from name-tag and region.
+
+    Args:
+        game_name (str): Username
+        tag_line (str): Tag (#)
+        region_code (RegionCode): Region code in which the user resides.
+
+    Returns:
+        Optional[str]: The corresponding PUUID or None if error.
+    """
+
     region_url = REGIONS.get(region_code)
-    if region_url is None: return
+    if region_url is None:
+        return None
 
-    # 2. COMMAND URL
-    command_url = "riot/account/v1/accounts/by-riot-id"
+    full_url = f"{region_url}/riot/account/v1/accounts/by-riot-id/{game_name}/{tag_line}"
 
-    # 3. INPUT
-    input_url = f"{game_name}/{tag_line}"
-
-    full_url = f"{region_url}/{command_url}/{input_url}"
-
-    # 'open browser'
-    # closes automatically
     async with aiohttp.ClientSession() as session:
-
-        # hit the URL
-        # send request
         async with session.get(full_url, headers=HEADERS) as response:
-
-            # 200 = ok, 404 not found (global HTTP)
             if response.status == 200:
-
                 data = await response.json()
-
                 return data['puuid']
 
             else:
@@ -82,21 +80,65 @@ async def get_puuid(game_name: str, tag_line: str, region_code: str) -> str | No
                 return None
             
 
-async def get_match_id(puuid: str, region: str) -> str | None:
+async def get_match_id(
+    puuid: str,
+    region: RegionCode
+) -> Optional[str]:
+    """Retrieves most recent match from PUUID and region.
+
+    Args:
+        puuid (str): The user's PUUID
+        region (RegionCode): Region code in which the user resides.
+
+    Returns:
+        Optional[str]: The corresponding match ID or None if error.
+    """
+    
     region_url = REGIONS.get(region)
-    if region_url is None: return
+    if region_url is None:
+        return None
 
     full_url = f"{region_url}/lol/match/v5/matches/by-puuid/{puuid}/ids"
 
     async with aiohttp.ClientSession() as session:
         async with session.get(full_url, headers=HEADERS) as response:
             if response.status == 200:
-                data = await response.json()
-                
+                data: list[str] = await response.json()
+            
                 if len(data) > 0:
                     return data[0]
                 
                 return None
+            
+            else:
+                print(f"Error: {response.status}")
+                return None
+
+
+async def get_match_data(
+    match_id: str,
+    region: RegionCode
+) -> Optional[dict[str, Any]]:
+    """Retrieves the data of a match ID and region.
+
+    Args:
+        match_id (str): The ID of the match.
+        region (RegionCode): Region code in which the user resides.
+
+    Returns:
+        Optional[dict[str, Any]]: A dictionary where each key is a string describing the statistic and a value of type Any. Returns None if error.
+    """
+
+    region_url = REGIONS.get(region)
+    if region_url is None:
+        return None
+
+    full_url = f"{region_url}/lol/match/v5/matches/{match_id}"
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(full_url, headers=HEADERS) as response:
+            if response.status == 200:
+                return await response.json()
             
             else:
                 print(f"Error: {response.status}")

@@ -1,194 +1,217 @@
+"""
+riot_types.py
+
+==========
+
+This module contains TypeDict definitions for the Riot Games API (Match-V5: https://developer.riotgames.com/apis#match-v5).
+These classes map the raw JSON response from Riot to strict Python types.
+
+Primarily used to enable autocomplete when getting specific data from the huge JSON response.
+"""
+
 # ========== Imports ==========
-from typing import TypedDict, Any, List, Dict
-
-# ========== Helper TypeDicts ==========
-class BanData(TypedDict):
-    championId: int
-    pickTurn: int
-
-class ObjectiveData(TypedDict):
-    first: bool
-    kills: int
-
-class ObjectivesData(TypedDict):
-    baron: ObjectiveData
-    dragon: ObjectiveData
-    tower: ObjectiveData
-    riftHerald: ObjectiveData
-    inhibitor: ObjectiveData
-
-class TeamData(TypedDict):
-    teamId: int
-    win: bool
-    bans: List[BanData]
-    objectives: ObjectivesData
-
-class PerksData(TypedDict, total=False):
-    statPerks: Dict[str, int]
-    styles: List[Dict[str, Any]]
+from typing import TypedDict, List
+# ... rest of your code ...
 
 
-# ========== Participant Data ==========
-class ParticipantData(TypedDict, total=False):
-    # Pings & Communication
-    allInPings: int
-    assistMePings: int
-    baitPings: int 
-    basicPings: int
-    commandPings: int
-    dangerPings: int
-    enemyMissingPings: int
-    enemyVisionPings: int
-    getBackPings: int
-    holdPings: int
-    needVisionPings: int
-    onMyWayPings: int
-    pushPings: int
-    visionClearedPings: int
+# ========== Imports ==========
+from typing import TypedDict, List
 
-    # Identity & Player Info
-    puuid: str
-    summonerName: str
-    summonerId: str
-    summonerLevel: int
-    riotIdGameName: str
-    riotIdTagline: str
-    profileIcon: int
-    participantId: int
-    teamId: int
+
+# ========== Perks Wrappers ==========
+class PerksData(TypedDict):
+    statPerks: PerkStatData
+    styles: List[PerkStyleData]
+
+class PerkStatData(TypedDict):
+    defense: int
+    flex: int
+    offense: int
+
+class PerkStyleData(TypedDict):
+    description: str
+    selections: List[PerkStyleSelectionData]
+    style: int
+
+class PerkStyleSelectionData(TypedDict):
+    perk: int
+    var1: int
+    var2: int
+    var3: int
+
+
+# ========== Challenges Data ==========
+class ChallengesData(TypedDict, total=False):
+    abilityUses: int
+    acesBefore15Minutes: int
+    alliedJungleMonsterKills: float
     
-    # Champion & Game State
-    championName: str
-    championId: int
-    championTransform: int
-    champExperience: int
-    champLevel: int
-    role: str
-    lane: str
-    individualPosition: str
-    teamPosition: str
-    win: bool
-    gameEndedInEarlySurrender: bool
-    gameEndedInSurrender: bool
-    teamEarlySurrendered: bool
-    timePlayed: int
+    baronBuffGoldAdvantageOverThreshold: int
+    baronTakedowns: int
+    blastConeOppositeOpponentCount: int
+    bountyGold: int
+    buffsStolen: int
     
-    # Kills / Deaths / Assists
-    kills: int
-    deaths: int
-    assists: int
+    completeSupportQuestInTime: int
+    controlWardTimeCoverageInRiverOrEnemyHalf: float
+    controlWardsPlaced: int
+    
+    damagePerMinute: float
+    damageTakenOnTeamPercentage: float
+    dancedWithRiftHerald: int
+    deathsByEnemyChamps: int
+    dodgeSkillShotsSmallWindow: int
+    doubleAces: int
+    dragonTakedowns: int
+    
+    earliestBaron: int
+    earliestDragonTakedown: int
+    earliestElderDragon: int
+    earlyLaningPhaseGoldExpAdvantage: int
+    effectiveHealAndShielding: float
+    elderDragonKillsWithOpposingSoul: int
+    elderDragonMultikills: int
+    enemyChampionImmobilizations: int
+    enemyJungleMonsterKills: float
+    epicMonsterKillsNearEnemyJungler: int
+    epicMonsterKillsWithin30SecondsOfSpawn: int
+    epicMonsterSteals: int
+    epicMonsterStolenWithoutSmite: int
+    
+    fasterSupportQuestCompletion: int
+    fastestLegendary: int
+    firstTurretKilled: int
+    firstTurretKilledTime: float
+    fistBumpParticipation: int
+    flawlessAces: int
+    fullTeamTakedown: int
+    
+    gameLength: float
+    getTakedownsInAllLanesEarlyJungleAsLaner: int
+    goldPerMinute: float
+    
+    hadAfkTeammate: int
+    hadOpenNexus: int
+    highestChampionDamage: int
+    highestCrowdControlScore: int
+    highestWardKills: int
+    
+    immobilizeAndKillWithAlly: int
+    InfernalScalePickup: int
+    initialBuffCount: int
+    initialCrabCount: int
+    
+    jungleCsBefore10Minutes: float
+    junglerKillsEarlyJungle: int
+    junglerTakedownsNearDamagedEpicMonster: int
+    
     kda: float
+    killAfterHiddenWithAlly: int
+    killedChampTookFullTeamDamageSurvived: int
     killingSprees: int
-    largestKillingSpree: int
-    largestMultiKill: int
-    doubleKills: int
-    tripleKills: int
-    quadraKills: int
-    pentaKills: int
-    unrealKills: int
-    firstBloodAssist: bool
-    firstBloodKill: bool
-    firstTowerAssist: bool
-    firstTowerKill: bool
-    bountyLevel: int
+    killParticipation: float
+    killsNearEnemyTurret: int
+    killsOnLanersEarlyJungleAsJungler: int
+    killsOnOtherLanesEarlyJungleAsLaner: int
+    killsOnRecentlyHealedByAramPack: int
+    killsUnderOwnTurret: int
+    killsWithHelpFromEpicMonster: int
+    knockEnemyIntoTeamAndKill: int
+    kTurretsDestroyedBeforePlatesFall: int
     
-    # Damage Dealt
-    totalDamageDealt: int
-    totalDamageDealtToChampions: int
-    physicalDamageDealt: int
-    physicalDamageDealtToChampions: int
-    magicDamageDealt: int
-    magicDamageDealtToChampions: int
-    trueDamageDealt: int
-    trueDamageDealtToChampions: int
-    damageDealtToBuildings: int
-    damageDealtToObjectives: int
-    damageDealtToTurrets: int
-    largestCriticalStrike: int
-    timeCCingOthers: int
-    totalTimeCCDealt: int
-
-    # Damage Taken & Healing
-    totalDamageTaken: int
-    physicalDamageTaken: int
-    magicDamageTaken: int
-    trueDamageTaken: int
-    damageSelfMitigated: int
-    totalHeal: int
-    totalHealsOnTeammates: int
-    totalUnitsHealed: int
-    totalDamageShieldedOnTeammates: int
-    longestTimeSpentLiving: int
-    totalTimeSpentDead: int
-
-    # Vision
-    visionScore: int
-    wardsPlaced: int
-    wardsKilled: int
-    detectorWardsPlaced: int
-    visionWardsBoughtInGame: int
-    sightWardsBoughtInGame: int
-
-    # Economy & Items
-    goldEarned: int
-    goldSpent: int
-    consumablesPurchased: int
-    itemsPurchased: int
-    item0: int
-    item1: int
-    item2: int
-    item3: int
-    item4: int
-    item5: int
-    item6: int
-
-    # Minions & Jungle
-    totalMinionsKilled: int
-    neutralMinionsKilled: int
-    totalAllyJungleMinionsKilled: int
-    totalEnemyJungleMinionsKilled: int
+    landSkillShotsEarlyGame: int
+    laneMinionsFirst10Minutes: int
+    laningPhaseGoldExpAdvantage: int
+    legendaryCount: int
+    legendaryItemUsed: List[int]
+    lostAnInhibitor: int
     
-    # Objectives
-    turretKills: int
+    maxCsAdvantageOnLaneOpponent: float
+    maxKillDeficit: int
+    maxLevelLeadLaneOpponent: int
+    mejaisFullStackInTime: int
+    moreEnemyJungleThanOpponent: float
+    mostWardsDestroyedOneSweeper: int
+    multiKillOneSpell: int
+    multikills: int
+    multikillsAfterAggressiveFlash: int
+    multiTurretRiftHeraldCount: int
+    mythicItemUsed: int
+    
+    outerTurretExecutesBefore10Minutes: int
+    outnumberedKills: int
+    outnumberedNexusKill: int
+    
+    perfectDragonSoulsTaken: int
+    perfectGame: int
+    pickKillWithAlly: int
+    playedChampSelectPosition: int
+    poroExplosions: int
+    
+    quickCleanse: int
+    quickFirstTurret: int
+    quickSoloKills: int
+    
+    riftHeraldTakedowns: int
+    
+    saveAllyFromDeath: int
+    scuttleCrabKills: int
+    shortestTimeToAceFromFirstTakedown: float
+    skillshotsDodged: int
+    skillshotsHit: int
+    snowballsHit: int
+    soloBaronKills: int
+    soloKills: int
+    soloTurretsLategame: int
+    stealthWardsPlaced: int
+    survivedSingleDigitHpCount: int
+    survivedThreeImmobilizesInFight: int
+    SWARM_DefeatAatrox: int
+    SWARM_DefeatBriar: int
+    SWARM_DefeatMiniBosses: int
+    SWARM_EvolveWeapon: int
+    SWARM_Have3Passives: int
+    SWARM_KillEnemy: int
+    SWARM_PickupGold: float
+    SWARM_ReachLevel50: int
+    SWARM_Survive15Min: int
+    SWARM_WinWith5EvolvedWeapons: int
+    
+    takedownOnFirstTurret: int
+    takedowns: int
+    takedownsAfterGainingLevelAdvantage: int
+    takedownsBeforeJungleMinionSpawn: int
+    takedownsFirst25Minutes: int
+    takedownsFirstXMinutes: int
+    takedownsInAlcove: int
+    takedownsInEnemyFountain: int
+    teamBaronKills: int
+    teamDamagePercentage: float
+    teamElderDragonKills: int
+    teamRiftHeraldKills: int
+    teleportTakedowns: int
+    thirdInhibitorDestroyedTime: int
+    threeWardsOneSweeperCount: int
+    tookLargeDamageSurvived: int
+    turretPlatesTaken: int
+    turretsTakenWithRiftHerald: int
     turretTakedowns: int
-    turretsLost: int
-    inhibitorKills: int
-    inhibitorTakedowns: int
-    inhibitorsLost: int
-    nexusKills: int
-    nexusTakedowns: int
-    nexusLost: int
-    dragonKills: int
-    baronKills: int
-    objectivesStolen: int
-    objectivesStolenAssists: int
+    twentyMinionsIn3SecondsCount: int
+    twoWardsOneSweeperCount: int
+    
+    unseenRecalls: int
+    
+    visionScoreAdvantageLaneOpponent: float
+    visionScorePerMinute: float
+    voidMonsterKill: int
+    
+    wardsGuarded: int
+    wardTakedowns: int
+    wardTakedownsBefore20M: int
 
-    # Spell Casts
-    spell1Casts: int
-    spell2Casts: int
-    spell3Casts: int
-    spell4Casts: int
-    summoner1Casts: int
-    summoner1Id: int
-    summoner2Casts: int
-    summoner2Id: int
 
-    # Arena / Special Modes
-    playerAugment1: int
-    playerAugment2: int
-    playerAugment3: int
-    playerAugment4: int
-    playerSubteamId: int
-    subteamPlacement: int
-    placement: int
-
-    # Complex Objects
-    # Challenges has hundreds of dynamic keys, so we use Dict[str, Any]
-    challenges: Dict[str, Any] 
-    missions: Dict[str, Any]
-    perks: PerksData
-
-    # Scores (Dominion/Old Modes)
+# ========== Mission Data ==========
+class MissionData(TypedDict):
     playerScore0: int
     playerScore1: int
     playerScore2: int
@@ -201,19 +224,229 @@ class ParticipantData(TypedDict, total=False):
     playerScore9: int
     playerScore10: int
     playerScore11: int
+
+    
+# ========== Participant Data ==========
+# large participant data fields
+# total = False so that it doesn't break if Riot changes things
+
+class ParticipantData(TypedDict, total=False):
+    allInPings: int
+    assistMePings: int
+    assists: int
+    
+    baronKills: int
+    bountyLevel: int
+    
+    challenges: ChallengesData
+    champExperience: int
+    champLevel: int
+    championId: int
+    championName: str
+    championTransform: int
+    commandPings: int
+    consumablesPurchased: int
+    
+    damageDealtToBuildings: int
+    damageDealtToObjectives: int
+    damageDealtToTurrets: int
+    damageSelfMitigated: int
+    deaths: int
+    detectorWardsPlaced: int
+    doubleKills: int
+    dragonKills: int
+    
     eligibleForProgression: bool
+    enemyMissingPings: int
+    enemyVisionPings: int
+    
+    firstBloodAssist: bool
+    firstBloodKill: bool
+    firstTowerAssist: bool
+    firstTowerKill: bool
+    
+    gameEndedInEarlySurrender: bool
+    gameEndedInSurrender: bool
+    getBackPings: int
+    goldEarned: int
+    goldSpent: int
+    
+    holdPings: int
+    
+    individualPosition: str
+    inhibitorKills: int
+    inhibitorTakedowns: int
+    inhibitorsLost: int
+    item0: int
+    item1: int
+    item2: int
+    item3: int
+    item4: int
+    item5: int
+    item6: int
+    itemsPurchased: int
+    
+    killingSprees: int
+    kills: int
+    
+    lane: str
+    largestCriticalStrike: int
+    largestKillingSpree: int
+    largestMultiKill: int
+    longestTimeSpentLiving: int
+    
+    magicDamageDealt: int
+    magicDamageDealtToChampions: int
+    magicDamageTaken: int
+    missions: MissionData
+    
+    needVisionPings: int
+    neutralMinionsKilled: int
+    nexusKills: int
+    nexusLost: int
+    nexusTakedowns: int
+    
+    objectivesStolen: int
+    objectivesStolenAssists: int
+    onMyWayPings: int
+    
+    participantId: int
+    pentaKills: int
+    perks: PerksData
+    physicalDamageDealt: int
+    physicalDamageDealtToChampions: int
+    physicalDamageTaken: int
+    placement: int
+    playerAugment1: int
+    playerAugment2: int
+    playerAugment3: int
+    playerAugment4: int
+    playerScore0: int
+    playerScore1: int
+    playerScore2: int
+    playerScore3: int
+    playerScore4: int
+    playerScore5: int
+    playerScore6: int
+    playerScore7: int
+    playerScore8: int
+    playerScore9: int
+    playerScore10: int
+    playerScore11: int
+    playerSubteamId: int
+    profileIcon: int
+    pushPings: int
+    puuid: str
+    
+    quadraKills: int
+    
+    riotIdGameName: str
+    riotIdTagline: str
+    role: str
+    
+    sightWardsBoughtInGame: int
+    spell1Casts: int
+    spell2Casts: int
+    spell3Casts: int
+    spell4Casts: int
+    subteamPlacement: int
+    summoner1Casts: int
+    summoner1Id: int
+    summoner2Casts: int
+    summoner2Id: int
+    summonerId: str
+    summonerLevel: int
+    summonerName: str
+    
+    teamEarlySurrendered: bool
+    teamId: int
+    teamPosition: str
+    timeCCingOthers: int
+    timePlayed: int
+    totalAllyJungleMinionsKilled: int
+    totalDamageDealt: int
+    totalDamageDealtToChampions: int
+    totalDamageShieldedOnTeammates: int
+    totalDamageTaken: int
+    totalEnemyJungleMinionsKilled: int
+    totalHeal: int
+    totalHealsOnTeammates: int
+    totalMinionsKilled: int
+    totalTimeCCDealt: int
+    totalTimeSpentDead: int
+    totalUnitsHealed: int
+    tripleKills: int
+    trueDamageDealt: int
+    trueDamageDealtToChampions: int
+    trueDamageTaken: int
+    turretKills: int
+    turretTakedowns: int
+    turretsLost: int
+    
+    unrealKills: int
+    
+    visionClearedPings: int
+    visionScore: int
+    visionWardsBoughtInGame: int
+    
+    wardsKilled: int
+    wardsPlaced: int
+    win: bool
+
+
+# ========== Objective Data ==========
+class ObjectivesData(TypedDict):
+    baron: ObjectiveData
+    champion: ObjectiveData
+    dragon: ObjectiveData
+    horde: ObjectiveData
+    inhibitor: ObjectiveData
+    riftHerald: ObjectiveData
+    tower: ObjectiveData
+
+class ObjectiveData(TypedDict):
+    first: bool
+    kills: int
+
+
+# ========== Team Wrappers ==========
+class TeamData(TypedDict):
+    bans: List[BanData]
+    objectives: ObjectivesData
+    teamId: int
+    win: bool
+
+class BanData(TypedDict):
+    championId: int
+    pickTurn: int
+
 
 # ========== Match Wrappers ==========
+# (first three on https://developer.riotgames.com/apis#match-v5/GET_getMatch)
+
 class GameInfo(TypedDict):
-    gameStartTimestamp: int
+    gameId: int
+    gameCreation: int
     gameDuration: int
+    gameStartTimestamp: int
+    gameEndTimestamp: int   # timestamp for when match ends on game server (calculate length using Start + Duration)
     gameMode: str
+    gameType: str
+    gameName: str
+    gameVersion: str        
+    mapId: int              # refer to Game Constants documentation
+    platformId: str         # platform where match was placed (e.g. EUW1)
+    queueId: int            # refer to Game Constants documentation
+    tournamentCode: str     # tournament code used to generate match
+    endOfGameResult: str    # indicate if game ended in termination
+    
     teams: List[TeamData]
     participants: List[ParticipantData]
 
 class MatchMetadata(TypedDict):
     matchId: str
-    participants: List[str]
+    dataVersion: str
+    participants: List[str]     # List of participants PUUIDs
 
 class MatchData(TypedDict):
     metadata: MatchMetadata

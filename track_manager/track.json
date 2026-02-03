@@ -1,13 +1,3 @@
 {
-    "guilds" : {
-        "guild_id" : {
-           "users" : {
-                "discord_id" : {
-                "puuid" : "puuid",
-                "region" : "EUW",
-                "matches" : ["MATCHID", "MATCHID2"]
-                }            
-            }
-        }
-    }
+    
 }

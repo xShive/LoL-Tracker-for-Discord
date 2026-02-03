@@ -1,7 +1,7 @@
 import json
 import os
 
-FILE = "track.json"
+FILE = "track_manager/track.json"
 
 class User:
     def __init__(self, discord_id: str, data: str):
@@ -38,15 +38,18 @@ class User:
     @region.setter
     def region(self, new_region: str):
         self._data["region"] = new_region
-    
-    def add_match(self, match_id: str):
-        if self._data["matches"] == match_id:
+
+    @matches.setter
+    def matches(self, match_id: str):
+        matches_list =  self._data["matches"]
+
+        if matches_list == match_id:
             return 
         
-        self._data.insert(0, match_id)
+        matches_list.insert(0, match_id)
 
-
-    
+        if len(matches_list) >= 11:
+            del matches_list[10]
 
 
 class Guild:
@@ -55,6 +58,8 @@ class Guild:
         self._data = guild_data
 
     def get_member(self, discord_id: str) -> User | None:
+
+
         users = self._data["users"]
 
         if discord_id in users:
@@ -88,9 +93,7 @@ class Guild:
             user_object = User(discord_id, data)
             all_users.append(user_object)
         return all_users
-
-# TrackManager.get_guild("")
-# 
+    
 
 class TrackManager:
     def __init__(self):
@@ -112,15 +115,24 @@ class TrackManager:
         
         try:
             with open(self._filepath, "r") as file:
-                return json.loads(file)
+                jsonfile = json.load(file)
+            
+            if jsonfile == {}:
+                jsonfile = {
+                    "guilds": {
+
+                    }
+                }
+            
+            return jsonfile
             
         except json.JSONDecodeError:
             print(f"ERROR: {self._filepath} might be corrupted.")
             return {"guilds": {}}
     
 
-
-    def get_guild(self, guild_id: str) -> Guild | None:
+    def get_guild(self, guild_id: int) -> Guild | None:
+        guild_id = str(guild_id)
 
         if "guilds" not in self._data:
             self._data["guilds"] = {}
@@ -132,6 +144,19 @@ class TrackManager:
 
         return Guild(guild_id, guild_map[guild_id])
     
+    def add_guild(self, guid_id: int):
+        guid_id = str(guid_id)
+
+        guild_map = self._data["guilds"]
+
+        if guid_id not in guild_map:
+            guild_map[guid_id] = {
+                "users": {
+                }
+            }
+        
+        return Guild(guid_id, guild_map[guid_id])
+
     def save(self):
         with open(self._filepath, 'w') as File:
             json.dump(self._data, File, indent=4)

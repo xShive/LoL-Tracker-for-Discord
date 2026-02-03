@@ -424,7 +424,7 @@ class BanData(TypedDict):
 # ========== Match Wrappers ==========
 # (first three on https://developer.riotgames.com/apis#match-v5/GET_getMatch)
 
-class GameInfo(TypedDict):
+class MatchInfo(TypedDict):
     gameId: int
     gameCreation: int
     gameDuration: int
@@ -450,4 +450,4 @@ class MatchMetadata(TypedDict):
 
 class MatchData(TypedDict):
     metadata: MatchMetadata
-    info: GameInfo
+    info: MatchInfo

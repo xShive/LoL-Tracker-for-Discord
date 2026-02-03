@@ -1,23 +1,19 @@
 # ========== Imports ==========
 from typing import Optional, List
-from riot.riot_types import MatchData, GameInfo, ParticipantData, TeamData
+from riot.riot_types import *
 
 
 # ========== Functions ==========
-def get_game_info(data: MatchData) -> GameInfo:
-    return data['info']
+def get_match_metadata(data: MatchData) -> Optional[MatchMetadata]:
+    """Extracts MatchMetadata from MatchData. Returns None if missing."""
+    return data.get('metadata')
 
-def get_teams(data: MatchData) -> List[TeamData]:
-    return data['info']['teams']
+def get_match_info(data: MatchData) -> Optional[MatchInfo]:
+    """Extracts MatchInfo from MatchData. Returns None if missing."""
+    return data.get('info')
 
-def get_participants(data: MatchData) -> List[ParticipantData]:
-    return data['info']['participants']
-
-def get_player_stats(data: MatchData, target_puuid: str) -> Optional[ParticipantData]:
-    participants = data['info']['participants']
-    
-    for player in participants:
-        if player.get('puuid') == target_puuid:
-            return player
-            
-    return None
+def get_participant_data(data: MatchData) -> Optional[List[ParticipantData]]:
+    """Extracts ParticipantData from Matchdata. Returns None if missing.
+        ParticipantData contains all 'useful' player statistics like kills.
+    """
+    return data.get('info').get('participants')

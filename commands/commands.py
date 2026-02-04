@@ -16,5 +16,6 @@ def register_commands(tree):
 
         if file:
             await interaction.followup.send(file=file)
+            
         else:
             await interaction.followup.send("Could not generate image.")

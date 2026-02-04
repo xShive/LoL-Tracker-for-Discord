@@ -128,7 +128,7 @@ async def get_match_data(
         region (RegionCode): Region code in which the user resides.
 
     Returns:
-        Optional[dict[str, Any]]: A dictionary where each key is a string describing the statistic and a value of type Any. Returns None if error.
+        Optional[MatchData]: The raw response .json sent by riot. None if error.
     """
 
     region_url = REGIONS.get(region)

@@ -2,31 +2,44 @@
 
 # ========== Imports ==========
 import discord
+from typing import Optional
 
 from riot.api import get_match_data, get_match_id
+from riot.extractors import *
 from track_manager.track_data import TrackManager
 
 
-
-# ========== Imports ==========
+# ========== Function ==========
 async def generate_image(
         discord_id: int,
-        guild_id: int,
+        guild_id: Optional[int],
         tracker: TrackManager,
-        image_type = str
-):
+        image_type: str
+) -> Optional[discord.File]:
+    
     # 1. TRIGGER LAYER
     # Trigger layer is the command that called this function.
 
     # 2. IDENTITY LAYER
-    """TODO: implement logic to get user"""
+    guild = tracker.get_guild(guild_id)
+    if not guild:
+        return None
+    
+    user = guild.get_member(discord_id)
+    if not user:
+        return None
+    
 
     # 3. DATA LAYER
-    """TODO: get raw json response of type MatchData"""
-
+    match_id = await get_match_id(user.puuid, user.region)
+    if not match_id or match_id in user.matches:
+        return None
+    
+    match_data = await get_match_data(match_id, user.region)
+    if not match_data:
+        return None
+    
     # 4. INTERPRETATION LAYER
-    """TODO: extract meaningful stats"""
+    # We always need to generate an overview
 
-    if image_type == "overview":
-        """TODO: call the overview.py (pass the meaningful data) function in rendering module which returns the generated image"""
-        pass 
+

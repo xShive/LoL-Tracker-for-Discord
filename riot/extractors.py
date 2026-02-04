@@ -1,6 +1,6 @@
 # ========== Imports ==========
 from typing import Optional, List
-from riot_types import *
+from riot.riot_types import *
 
 
 # ========== Functions ==========

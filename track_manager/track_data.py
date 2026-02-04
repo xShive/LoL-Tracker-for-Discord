@@ -227,7 +227,7 @@ class TrackManager:
             return None
     
 
-    def get_guild(self, guild_id_int: int) -> Guild | None:
+    def get_guild(self, guild_id_int: Optional[int]) -> Guild | None:
         """
         Gets the json content from a specific guild
 
@@ -240,6 +240,9 @@ class TrackManager:
 
             `Guild | None`: The guild class or Nothing whenever faced with a problem
         """
+        if not guild_id_int:
+            return None
+        
         guild_id_str = str(guild_id_int)
 
         if self._data is None:

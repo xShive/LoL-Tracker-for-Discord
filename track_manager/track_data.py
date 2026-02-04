@@ -1,8 +1,11 @@
+# ========== Imports ==========
 import json
 import os
+from typing import Optional
 
 FILE = "track_manager/track.json"
 
+# ========== Classes ==========
 class User:
     """
     This class makes sure you can edit the data in the user itself
@@ -15,17 +18,14 @@ class User:
         - `recent_matches` only has a getter
 
     **IMPORTANT**
-        When ever your with editing or adding to the json you're forced to use the `save()` function from `TrackManager()` or else your changes won't go through!!
+        Whenever you're with editing or adding to the json you're forced to use the `save()` function from `TrackManager()` or else your changes won't go through!!
     """
 
-    def __init__(self, discord_id: str, data: str):
+    def __init__(self, discord_id: str, data: dict):
         self._id = discord_id
         self._data = data
     
     # GETTERS:
-
-    # User.puuid 
-
     @property
     def puuid(self) -> str:
         return self._data["puuid"]
@@ -35,16 +35,20 @@ class User:
         return self._data["region"]
     
     @property
-    def matches(self) -> list:
+    def matches(self) -> list[str]:
+        # Returns a copy so outside code doesn't break the internal list
         return list(self._data["matches"])
     
     @property
-    def recent_match(self) -> str | None:
-        if self._data["matches"] == None:
-            return self._data["matches"][0]
+    def recent_match(self) -> Optional[str]:
+        matches = self._data["matches"]
+        # Check if list is NOT empty before accessing [0]
+        if matches:  
+            return matches[0]
+        
+        return None
     
     # SETTERS:
-
     @puuid.setter
     def puuid(self, new_puuid: str):
         self._data["puuid"] = new_puuid
@@ -55,87 +59,91 @@ class User:
 
     @matches.setter
     def matches(self, match_id: str):
-        matches_list =  self._data["matches"]
+        matches_list = self._data["matches"]
 
-        if matches_list == match_id:
+        # Check if match_id is in the list, or if it equals the latest one
+        # If the match is already the most recent one, we skip adding it
+        if matches_list and matches_list[0] == match_id:
             return 
         
+        # Insert at the top (newest match)
         matches_list.insert(0, match_id)
 
-        if len(matches_list) >= 11:
-            del matches_list[10]
-
+        # Keep only the last 10 matches
+        if len(matches_list) > 10:
+            matches_list.pop()
+            
 
 class Guild:
     """
-    The guild class gives you access to the members inside of it
+    The guild class gives you access to the members inside of it.
 
-    *Function:*
+    *Functions:*
         `get_member()`: gets the member with the corresponding id
         `add_member()`: adds a member with the corresponding id, puuid, region
         `remove_member()`: removes a member with a corresponding id
     
     **IMPORTANT**
-        When ever your with editing or adding to the json you're forced to use the `save()` function from `TrackManager()` or else your changes won't go through!!
+        Whenever you are editing or adding to the json you're forced to use the `save()` 
+        function from `TrackManager()` or else your changes won't go through!!
     """
 
     def __init__(self, guild_id: str, guild_data: dict):
         self._id = guild_id
         self._data = guild_data
 
-    def get_member(self, discord_id: int) -> User | None:
+    def get_member(self, discord_id: int) -> Optional['User']:
         """
-        gets the member from the guild with an specified id
+        Gets the member from the guild with a specified id.
 
-        *Note: Save your changes you made with `save()` from `TrackManager`*
+        *Note: Save your changes with `save()` from `TrackManager`*
 
         Args:
             discord_id (int): the member you want to get
 
         Returns:
-
-            `User | None`: The user when found, otherwise None
+            User | None: The user when found, otherwise None
         """
-        discord_id = str(discord_id)
-
+        discord_id_str = str(discord_id)
         users = self._data["users"]
 
-        if discord_id in users:
-            return User(discord_id, users[discord_id])
+        if discord_id_str in users:
+            return User(discord_id_str, users[discord_id_str])
+        
         return None
     
-    def add_member(self, discord_id: int, puuid: str, region: str) -> User:
+    def add_member(self, discord_id: int, puuid: str, region: str) -> 'User':
         """
-        Adds a member to the guild with a specified data
+        Adds a member to the guild with specified data.
 
-        *Note: Save your changes you made with `save()` from `TrackManager`*
+        *Note: Save your changes with `save()` from `TrackManager`*
 
         Args:
-            discord_id (int): the users discord ID
-            puuid (str): the users puuid
+            discord_id (int): the user's discord ID
+            puuid (str): the user's puuid
             region (str): the region that the user is located at
 
         Returns:
             User: The added user
         """
-        discord_id = str(discord_id)
-
+        discord_id_str = str(discord_id)
         users = self._data["users"]
 
-        if discord_id not in users:
-            users[discord_id] = {
+        # Add if user doesn't exist yet
+        if discord_id_str not in users:
+            users[discord_id_str] = {
                 "puuid": puuid,
                 "region": region,
                 "recent_matches": []
             }
 
-        return User(discord_id, users[discord_id])
+        return User(discord_id_str, users[discord_id_str])
     
     def remove_member(self, discord_id: int) -> bool:
         """
-        Removes a member from the guild
+        Removes a member from the guild.
 
-        *Note: Save your changes you made with `save()` from `TrackManager`*
+        *Note: Save your changes with `save()` from `TrackManager`*
 
         Args:
             discord_id (int): the member you want to remove
@@ -143,32 +151,32 @@ class Guild:
         Returns:
             bool: True if it got removed, otherwise False
         """
-
-        discord_id = str(discord_id)
+        discord_id_str = str(discord_id)
         users = self._data["users"]
 
-        if discord_id in users:
-            del User[discord_id]
+        if discord_id_str in users:
+            del users[discord_id_str]
             return True
 
         return False
     
-    def get_all_members(self) -> list:
+    def get_all_members(self) -> list['User']:
         """
-        get a list of all the member in the guild
+        Get a list of all members in the guild.
 
-        *Note: Save your changes you made with `save()` from `TrackManager`*
+        *Note: Save your changes with `save()` from `TrackManager`*
 
         Returns:
             list: The list of members in the guild
         """
         all_users = []
-        for discord_id, data in self._data["users"].items():
-            user_object = User(discord_id, data)
+        # We iterate over the dictionary items to get both ID and Data
+        for discord_id_str, user_data in self._data["users"].items():
+            user_object = User(discord_id_str, user_data)
             all_users.append(user_object)
+            
         return all_users
     
-
 class TrackManager:
     """
     TrackManager is a class where your able to add a new guild with an ID or get a guild with a specific ID and save it in the json file.
@@ -219,7 +227,7 @@ class TrackManager:
             return None
     
 
-    def get_guild(self, guild_id: int) -> Guild | None:
+    def get_guild(self, guild_id_int: int) -> Guild | None:
         """
         Gets the json content from a specific guild
 
@@ -232,19 +240,22 @@ class TrackManager:
 
             `Guild | None`: The guild class or Nothing whenever faced with a problem
         """
-        guild_id = str(guild_id)
+        guild_id_str = str(guild_id_int)
 
-        if "guilds" not in self._data:
+        if self._data is None:
+            return None
+        
+        if not self._data.get("guilds"):
             self._data["guilds"] = {}
 
         guild_map = self._data["guilds"]
 
-        if guild_id not in guild_map:
+        if not guild_map.get(guild_id_str):
             return None
 
-        return Guild(guild_id, guild_map[guild_id])
+        return Guild(guild_id_str, guild_map[guild_id_str])
     
-    def add_guild(self, guid_id: int) -> Guild:
+    def add_guild(self, guid_id_int: int) -> Guild | None:
         """
         Adds a new guild to the json and returns the guild you added
 
@@ -256,19 +267,26 @@ class TrackManager:
         Returns:
             Guild: the added guild or already existing guild
         """
-        guid_id = str(guid_id)
+        guid_id_str = str(guid_id_int)
 
-        guild_map = self._data["guilds"]
+        if self._data is None:
+            return None
 
-        if guid_id not in guild_map:
-            guild_map[guid_id] = {
+        guild_map = self._data.get("guilds")
+
+        if guild_map is None:
+            self._data["guilds"] = {}
+            return None
+
+        if not guild_map.get(guid_id_str):
+            guild_map[guid_id_str] = {
                 "users": {
                 }
             }
         
-        return Guild(guid_id, guild_map[guid_id])
+        return Guild(guid_id_str, guild_map[guid_id_str])
     
-    def remove_guild(self, guild_id: int) -> bool:
+    def remove_guild(self, guild_id_int: int) -> bool:
         """
         Removes a guild from the json
 
@@ -280,11 +298,18 @@ class TrackManager:
         Returns:
             bool: True if the guild was deleted, otherwise False
         """
+        guild_id_str = str(guild_id_int) 
 
-        guild_map = self._data["guilds"]
+        if self._data is None:
+            return False
 
-        if guild_id in guild_map:
-            del guild_map[guild_id]
+        guild_map = self._data.get("guilds")
+
+        if guild_map == None:
+            return False
+
+        if guild_map.get(guild_id_str):
+            del guild_map[guild_id_str]
             return True
         
         return False

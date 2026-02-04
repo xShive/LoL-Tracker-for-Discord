@@ -15,7 +15,7 @@ class User:
         - `puuid`
         - `region`
         - `matches`
-        - `recent_matches` only has a getter
+        - `recent_match` only has a getter
 
     **IMPORTANT**
         Whenever you're with editing or adding to the json you're forced to use the `save()` function from `TrackManager()` or else your changes won't go through!!

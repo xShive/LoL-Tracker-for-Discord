@@ -7,6 +7,8 @@ from discord import app_commands
 from commands.commands import register_commands
 from commands.errors import register_errors
 
+from track_manager.track_data import TrackManager
+track = TrackManager()
 
 # ========== Setup ==========
 dotenv.load_dotenv()
@@ -37,16 +39,19 @@ async def on_ready():
     # sync all joined guilds
     async for guild in client.fetch_guilds():
         """TODO: CHECK IF GUILD.ID AL ERIN ZIT """
+        if not track.get_guild(guild.id):
+            track.add_guild(guild.id)
+            track.save()
 
 
 @client.event
 async def on_guild_join(guild: discord.Guild):
-    """TODO: CALL FUNCTION TO ADD THIS GUILD ID"""
-    # update_config(guild.id)
+    track.add_guild(guild.id)
+    track.save()
 
 @client.event
-async def on_guild_leave(guild: discord.Guild):
-    """TODO: CALL FUNCTION TO REMOVE THIS GUILD"""
-    # update_config(guild_id)
+async def on_guild_remove(guild: discord.Guild):
+    track.remove_guild(guild.id)
+    track.save()
 
 client.run(token)

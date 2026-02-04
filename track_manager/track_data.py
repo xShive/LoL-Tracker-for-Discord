@@ -219,7 +219,7 @@ class TrackManager:
             return None
     
 
-    def get_guild(self, guild_id: int) -> Guild | None:
+    def get_guild(self, guild_id_int: int) -> Guild | None:
         """
         Gets the json content from a specific guild
 
@@ -232,17 +232,20 @@ class TrackManager:
 
             `Guild | None`: The guild class or Nothing whenever faced with a problem
         """
-        guild_id = str(guild_id)
+        guild_id_str = str(guild_id_int)
 
-        if "guilds" not in self._data:
+        if self._data is None:
+            return None
+        
+        if not self._data.get("guilds"):
             self._data["guilds"] = {}
 
         guild_map = self._data["guilds"]
 
-        if guild_id not in guild_map:
+        if not guild_map.get(guild_id_str):
             return None
 
-        return Guild(guild_id, guild_map[guild_id])
+        return Guild(guild_id_int, guild_map[guild_id_str])
     
     def add_guild(self, guid_id: int) -> Guild:
         """

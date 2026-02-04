@@ -247,7 +247,7 @@ class TrackManager:
 
         return Guild(guild_id_int, guild_map[guild_id_str])
     
-    def add_guild(self, guid_id: int) -> Guild:
+    def add_guild(self, guid_id_int: int) -> Guild | None:
         """
         Adds a new guild to the json and returns the guild you added
 
@@ -259,19 +259,26 @@ class TrackManager:
         Returns:
             Guild: the added guild or already existing guild
         """
-        guid_id = str(guid_id)
+        guid_id_str = str(guid_id_int)
 
-        guild_map = self._data["guilds"]
+        if self._data is None:
+            return None
 
-        if guid_id not in guild_map:
-            guild_map[guid_id] = {
+        guild_map = self._data.get("guilds")
+
+        if guild_map is None:
+            self._data["guilds"] = {}
+            return None
+
+        if not guild_map.get(guid_id_str):
+            guild_map[guid_id_str] = {
                 "users": {
                 }
             }
         
-        return Guild(guid_id, guild_map[guid_id])
+        return Guild(guid_id_int, guild_map[guid_id_str])
     
-    def remove_guild(self, guild_id: int) -> bool:
+    def remove_guild(self, guild_id_int: int) -> bool:
         """
         Removes a guild from the json
 
@@ -283,11 +290,18 @@ class TrackManager:
         Returns:
             bool: True if the guild was deleted, otherwise False
         """
+        guild_id_str = str(guild_id_int) 
 
-        guild_map = self._data["guilds"]
+        if self._data is None:
+            return False
 
-        if guild_id in guild_map:
-            del guild_map[guild_id]
+        guild_map = self._data.get("guilds")
+
+        if guild_map == None:
+            return False
+
+        if guild_map.get(guild_id_str):
+            del guild_map[guild_id_str]
             return True
         
         return False

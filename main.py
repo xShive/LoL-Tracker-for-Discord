@@ -38,7 +38,6 @@ async def on_ready():
 
     # sync all joined guilds
     async for guild in client.fetch_guilds():
-        """TODO: CHECK IF GUILD.ID AL ERIN ZIT """
         if not track.get_guild(guild.id):
             track.add_guild(guild.id)
             track.save()

@@ -112,7 +112,7 @@ class Guild:
         
         return None
     
-    def add_member(self, discord_id: int, puuid: str, region: str) -> 'User':
+    def add_member(self, discord_id: int, puuid: str, region: str) -> Optional[User]:
         """
         Adds a member to the guild with specified data.
 
@@ -134,10 +134,12 @@ class Guild:
             users[discord_id_str] = {
                 "puuid": puuid,
                 "region": region,
-                "recent_matches": []
+                "matches": []
             }
+            return User(discord_id_str, users[discord_id_str])
+        
+        return None
 
-        return User(discord_id_str, users[discord_id_str])
     
     def remove_member(self, discord_id: int) -> bool:
         """

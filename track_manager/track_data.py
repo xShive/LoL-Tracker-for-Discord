@@ -1,5 +1,6 @@
 import json
 import os
+from typing import Optional
 
 FILE = "track_manager/track.json"
 
@@ -68,74 +69,74 @@ class User:
 
 class Guild:
     """
-    The guild class gives you access to the members inside of it
+    The guild class gives you access to the members inside of it.
 
-    *Function:*
+    *Functions:*
         `get_member()`: gets the member with the corresponding id
         `add_member()`: adds a member with the corresponding id, puuid, region
         `remove_member()`: removes a member with a corresponding id
     
     **IMPORTANT**
-        When ever your with editing or adding to the json you're forced to use the `save()` function from `TrackManager()` or else your changes won't go through!!
+        Whenever you are editing or adding to the json you're forced to use the `save()` 
+        function from `TrackManager()` or else your changes won't go through!!
     """
 
     def __init__(self, guild_id: str, guild_data: dict):
         self._id = guild_id
         self._data = guild_data
 
-    def get_member(self, discord_id: int) -> User | None:
+    def get_member(self, discord_id: int) -> Optional['User']:
         """
-        gets the member from the guild with an specified id
+        Gets the member from the guild with a specified id.
 
-        *Note: Save your changes you made with `save()` from `TrackManager`*
+        *Note: Save your changes with `save()` from `TrackManager`*
 
         Args:
             discord_id (int): the member you want to get
 
         Returns:
-
-            `User | None`: The user when found, otherwise None
+            User | None: The user when found, otherwise None
         """
-        discord_id = str(discord_id)
-
+        discord_id_str = str(discord_id)
         users = self._data["users"]
 
-        if discord_id in users:
-            return User(discord_id, users[discord_id])
+        if discord_id_str in users:
+            return User(discord_id_str, users[discord_id_str])
+        
         return None
     
-    def add_member(self, discord_id: int, puuid: str, region: str) -> User:
+    def add_member(self, discord_id: int, puuid: str, region: str) -> 'User':
         """
-        Adds a member to the guild with a specified data
+        Adds a member to the guild with specified data.
 
-        *Note: Save your changes you made with `save()` from `TrackManager`*
+        *Note: Save your changes with `save()` from `TrackManager`*
 
         Args:
-            discord_id (int): the users discord ID
-            puuid (str): the users puuid
+            discord_id (int): the user's discord ID
+            puuid (str): the user's puuid
             region (str): the region that the user is located at
 
         Returns:
             User: The added user
         """
-        discord_id = str(discord_id)
-
+        discord_id_str = str(discord_id)
         users = self._data["users"]
 
-        if discord_id not in users:
-            users[discord_id] = {
+        # Add if user doesn't exist yet
+        if discord_id_str not in users:
+            users[discord_id_str] = {
                 "puuid": puuid,
                 "region": region,
                 "recent_matches": []
             }
 
-        return User(discord_id, users[discord_id])
+        return User(discord_id_str, users[discord_id_str])
     
     def remove_member(self, discord_id: int) -> bool:
         """
-        Removes a member from the guild
+        Removes a member from the guild.
 
-        *Note: Save your changes you made with `save()` from `TrackManager`*
+        *Note: Save your changes with `save()` from `TrackManager`*
 
         Args:
             discord_id (int): the member you want to remove
@@ -143,32 +144,32 @@ class Guild:
         Returns:
             bool: True if it got removed, otherwise False
         """
-
-        discord_id = str(discord_id)
+        discord_id_str = str(discord_id)
         users = self._data["users"]
 
-        if discord_id in users:
-            del User[discord_id]
+        if discord_id_str in users:
+            del users[discord_id_str]
             return True
 
         return False
     
-    def get_all_members(self) -> list:
+    def get_all_members(self) -> list['User']:
         """
-        get a list of all the member in the guild
+        Get a list of all members in the guild.
 
-        *Note: Save your changes you made with `save()` from `TrackManager`*
+        *Note: Save your changes with `save()` from `TrackManager`*
 
         Returns:
             list: The list of members in the guild
         """
         all_users = []
-        for discord_id, data in self._data["users"].items():
-            user_object = User(discord_id, data)
+        # We iterate over the dictionary items to get both ID and Data
+        for discord_id_str, user_data in self._data["users"].items():
+            user_object = User(discord_id_str, user_data)
             all_users.append(user_object)
+            
         return all_users
     
-
 class TrackManager:
     """
     TrackManager is a class where your able to add a new guild with an ID or get a guild with a specific ID and save it in the json file.

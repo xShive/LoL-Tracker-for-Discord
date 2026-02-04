@@ -1,9 +1,11 @@
+# ========== Imports ==========
 import json
 import os
 from typing import Optional
 
 FILE = "track_manager/track.json"
 
+# ========== Classes ==========
 class User:
     """
     This class makes sure you can edit the data in the user itself
@@ -16,17 +18,14 @@ class User:
         - `recent_matches` only has a getter
 
     **IMPORTANT**
-        When ever your with editing or adding to the json you're forced to use the `save()` function from `TrackManager()` or else your changes won't go through!!
+        Whenever you're with editing or adding to the json you're forced to use the `save()` function from `TrackManager()` or else your changes won't go through!!
     """
 
-    def __init__(self, discord_id: str, data: str):
+    def __init__(self, discord_id: str, data: dict):
         self._id = discord_id
         self._data = data
     
     # GETTERS:
-
-    # User.puuid 
-
     @property
     def puuid(self) -> str:
         return self._data["puuid"]
@@ -36,16 +35,20 @@ class User:
         return self._data["region"]
     
     @property
-    def matches(self) -> list:
+    def matches(self) -> list[str]:
+        # Returns a copy so outside code doesn't break the internal list
         return list(self._data["matches"])
     
     @property
-    def recent_match(self) -> str | None:
-        if self._data["matches"] == None:
-            return self._data["matches"][0]
+    def recent_match(self) -> Optional[str]:
+        matches = self._data["matches"]
+        # Check if list is NOT empty before accessing [0]
+        if matches:  
+            return matches[0]
+        
+        return None
     
     # SETTERS:
-
     @puuid.setter
     def puuid(self, new_puuid: str):
         self._data["puuid"] = new_puuid
@@ -56,16 +59,20 @@ class User:
 
     @matches.setter
     def matches(self, match_id: str):
-        matches_list =  self._data["matches"]
+        matches_list = self._data["matches"]
 
-        if matches_list == match_id:
+        # Check if match_id is in the list, or if it equals the latest one
+        # If the match is already the most recent one, we skip adding it
+        if matches_list and matches_list[0] == match_id:
             return 
         
+        # Insert at the top (newest match)
         matches_list.insert(0, match_id)
 
-        if len(matches_list) >= 11:
-            del matches_list[10]
-
+        # Keep only the last 10 matches
+        if len(matches_list) > 10:
+            matches_list.pop()
+            
 
 class Guild:
     """

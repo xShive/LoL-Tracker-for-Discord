@@ -2,30 +2,19 @@
 import discord
 
 from riot.api import *
+from services.match_service import generate_image
+from track_manager.track_data import TrackManager
 
 
 # ========== Commands registry ==========
 def register_commands(tree):
-    @tree.command(name="recent_matches", description="show recent league of legends matches for a gamer")
-    async def recent_matches(interaction: discord.Interaction, riot_name: str, region: str):
+    @tree.command(name="recent_match", description="show an overview of you most recent LoL game.")
+    async def recent_matches(interaction: discord.Interaction):
         await interaction.response.defer()
 
-        if '#' not in riot_name:
-            await interaction.edit_original_response(content="Invalid Riot name. Please include the tagline (#)")
-            return
+        file = await generate_image(interaction.user.id, interaction.guild_id, TrackManager(), "overview")
 
-        name_parts = riot_name.split("#")
-
-        puuid = await get_puuid(name_parts[0], name_parts[1], region)
-        if puuid is None:
-            await interaction.edit_original_response(content="Unexpected error.")
-            return
-        
-        match_id = await get_match_id(puuid, region)
-        if match_id is None:
-            await interaction.edit_original_response(content="Unexpected error.")
-            return
-
-        await interaction.edit_original_response(content=f"Your latest match ID: {match_id}")
-        return
-
+        if file:
+            await interaction.followup.send(file=file)
+        else:
+            await interaction.followup.send("Could not generate image.")

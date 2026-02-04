@@ -19,10 +19,6 @@ class PerkStatData(TypedDict):
     flex: int
     offense: int
 
-class PerksData(TypedDict):
-    statPerks: PerkStatData
-    styles: List[PerkStyleData]
-
 class PerkStyleSelectionData(TypedDict):
     perk: int
     var1: int
@@ -33,6 +29,10 @@ class PerkStyleData(TypedDict):
     description: str
     selections: List[PerkStyleSelectionData]
     style: int
+
+class PerksData(TypedDict):
+    statPerks: PerkStatData
+    styles: List[PerkStyleData]
 
 
 # ========== Challenges Data ==========

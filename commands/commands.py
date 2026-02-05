@@ -1,9 +1,20 @@
 # ========== Imports ==========
+import os
+import dotenv
 import discord
 
 from helpers.riot_helpers import validate_region, get_puuid_and_match_id
 from helpers.discord_helpers import get_guild_from_interaction, track
 
+
+dotenv.load_dotenv()
+
+DEV_TOKEN = os.getenv("DEV_TOKEN")
+if not DEV_TOKEN is None:
+    DEV_TOKEN_LIST = DEV_TOKEN.split(",")
+else:
+    print("ERROR: Enviroment variable for DEV_TOKEN is not properly set")
+    DEV_TOKEN_LIST = []
 
 # ========== Command Registry ==========
 def register_commands(tree):
@@ -14,6 +25,11 @@ def register_commands(tree):
         riot_name: str,
         region: str,
     ):
+        if not str(discord_user.id) in DEV_TOKEN_LIST:
+            await interaction.response.send_message("You're not authorized to use this feature.", ephemeral=True)
+            return
+
+        region = region.upper()
         if not validate_region(region):
             await interaction.response.send_message("Invalid region.", ephemeral=True)
             return
@@ -45,6 +61,10 @@ def register_commands(tree):
         interaction: discord.Interaction,
         discord_user: discord.User,
     ):
+        if not str(discord_user.id) in DEV_TOKEN_LIST:
+            await interaction.response.send_message("You're not authorized to use this feature.", ephemeral=True)
+            return
+
         guild = get_guild_from_interaction(interaction)
         if not guild:
             await interaction.response.send_message("Guild does not exist.", ephemeral=True)

@@ -12,6 +12,7 @@ class User:
 
     *Function:*
         getters/setters for the following:
+        - `discord_id` only has a getter
         - `puuid`
         - `region`
         - `matches`
@@ -26,6 +27,10 @@ class User:
         self._data = data
     
     # GETTERS:
+    @property
+    def discord_id(self) -> str:
+        return self._id
+
     @property
     def puuid(self) -> str:
         return self._data["puuid"]
@@ -79,6 +84,7 @@ class Guild:
     The guild class gives you access to the members inside of it.
 
     *Functions:*
+        `guild_id`: gets you the guild id your working in
         `get_member()`: gets the member with the corresponding id
         `add_member()`: adds a member with the corresponding id, puuid, region
         `remove_member()`: removes a member with a corresponding id
@@ -91,6 +97,10 @@ class Guild:
     def __init__(self, guild_id: str, guild_data: dict):
         self._id = guild_id
         self._data = guild_data
+
+    @property
+    def guild_id(self) -> str:
+        return self._id
 
     def get_member(self, discord_id: int) -> Optional[User]:
         """

@@ -4,6 +4,8 @@ from discord import app_commands
 from helpers.riot_helpers import validate_region, get_puuid_and_match_id
 from helpers.discord_helpers import *
 
+from commands.embeds import *
+
 # ========== Command Registry ==========
 def register_commands(tree, track: TrackManager):
 
@@ -61,3 +63,16 @@ def register_commands(tree, track: TrackManager):
 
         track.save()
         await interaction.response.send_message("User has been successfully removed.", ephemeral=True,)
+
+    @tree.command(name="show_all_users", description="Shows all added users in the guild")
+    @app_commands.check(validate_user)
+    async def show_all_users(interaction: discord.Interaction):
+        guild = get_guild_from_interaction(interaction)
+        if not guild:
+            await interaction.response.send_message("Guild does not exist.", ephemeral=True)
+            return
+
+        user_list = guild.get_all_members()
+        
+        await interaction.response.send_message(embed= await All_User_embed(interaction, int(guild.guild_id), user_list))
+

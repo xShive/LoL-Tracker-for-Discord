@@ -1,4 +1,6 @@
 # ========== Imports ==========
+import aiohttp
+
 from riot.api import get_puuid, get_match_id, REGIONS
 from typing import Optional, Tuple
 
@@ -17,7 +19,11 @@ def validate_region(region: str) -> bool:
     return True if region in REGIONS else False
 
 
-async def get_puuid_and_match_id(riot_name: str, region: str) -> Tuple[Optional[str], Optional[str]]:
+async def get_puuid_and_match_id(
+        riot_name: str, 
+        region: str,
+        session: aiohttp.ClientSession
+) -> Tuple[Optional[str], Optional[str]]:
     """Returns a tuple with the puuid and the match_id. Returns None if either of them fail."""
     parsed = split_riot_name(riot_name)
     if not parsed:
@@ -25,11 +31,11 @@ async def get_puuid_and_match_id(riot_name: str, region: str) -> Tuple[Optional[
 
     game_name, tag = parsed
 
-    puuid = await get_puuid(game_name, tag, region)
+    puuid = await get_puuid(game_name, tag, region, session)
     if not puuid:
         return None, None
 
-    match_id = await get_match_id(puuid, region)
+    match_id = await get_match_id(puuid, region, session)
     if not match_id:
         return None, None
 

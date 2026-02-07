@@ -2,6 +2,7 @@
 import os
 import dotenv
 import discord
+import aiohttp
 
 from discord import app_commands
 from commands.commands import register_commands
@@ -20,6 +21,9 @@ client = discord.Client(intents=intents)
 tree = app_commands.CommandTree(client)
 register_commands(tree, track)
 register_errors(tree)
+
+# None because at import time bot isnt connected
+http_session: aiohttp.ClientSession | None = None
 
 
 # ========== Startup ==========
@@ -41,6 +45,10 @@ async def on_ready():
         if not track.get_guild(guild.id):
             track.add_guild(guild.id)
             track.save()
+    
+    # open http_session
+    global http_session
+    http_session = aiohttp.ClientSession()
 
 
 @client.event
@@ -52,5 +60,10 @@ async def on_guild_join(guild: discord.Guild):
 async def on_guild_remove(guild: discord.Guild):
     track.remove_guild(guild.id)
     track.save()
+
+@client.event
+async def on_close():
+    if http_session:
+        await http_session.close()
 
 client.run(token)

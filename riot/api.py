@@ -52,7 +52,8 @@ REGIONS = {
 async def get_puuid(
     game_name: str,
     tag_line: str,
-    region_code: RegionCode
+    region_code: RegionCode,
+    session: aiohttp.ClientSession
 ) -> Optional[str]:
     """Retrieves PUUID from name-tag and region.
 
@@ -71,20 +72,20 @@ async def get_puuid(
 
     full_url = f"{region_url}/riot/account/v1/accounts/by-riot-id/{game_name}/{tag_line}"
 
-    async with aiohttp.ClientSession() as session:
-        async with session.get(full_url, headers=HEADERS) as response:
-            if response.status == 200:
-                data = await response.json()
-                return data.get("puuid")
+    async with session.get(full_url, headers=HEADERS) as response:
+        if response.status == 200:
+            data = await response.json()
+            return data.get("puuid")
 
-            else:
-                print(f"Error: {response.status}")
-                return None
+        else:
+            print(f"Error: {response.status}")
+            return None
             
 
 async def get_match_id(
     puuid: str,
-    region: RegionCode
+    region: RegionCode,
+    session: aiohttp.ClientSession
 ) -> Optional[str]:
     """Retrieves most recent match from PUUID and region.
 
@@ -102,24 +103,24 @@ async def get_match_id(
 
     full_url = f"{region_url}/lol/match/v5/matches/by-puuid/{puuid}/ids"
 
-    async with aiohttp.ClientSession() as session:
-        async with session.get(full_url, headers=HEADERS) as response:
-            if response.status == 200:
-                data: list[str] = await response.json()
-            
-                if not data:
-                    return None
-                
-                return data[0]
-            
-            else:
-                print(f"Error: {response.status}")
+    async with session.get(full_url, headers=HEADERS) as response:
+        if response.status == 200:
+            data: list[str] = await response.json()
+        
+            if not data:
                 return None
+            
+            return data[0]
+        
+        else:
+            print(f"Error: {response.status}")
+            return None
 
 
 async def get_match_data(
     match_id: str,
-    region: RegionCode
+    region: RegionCode,
+    session: aiohttp.ClientSession
 ) -> Optional[MatchData]:
     """Retrieves the data of a match ID and region.
 

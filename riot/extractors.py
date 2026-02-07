@@ -1,6 +1,6 @@
 # ========== Imports ==========
 from typing import Optional, List
-from riot_types import *
+from riot.riot_types import *
 
 
 # ========== Functions ==========
@@ -12,7 +12,7 @@ def get_match_info(data: MatchData) -> Optional[MatchInfo]:
     """Extracts MatchInfo from MatchData. Returns None if missing."""
     return data.get('info')
 
-def get_participant_data(data: MatchInfo) -> Optional[List[ParticipantData]]:
+def get_participants(data: MatchInfo) -> Optional[List[ParticipantData]]:
     """Extracts a list of ParticipantData from Matchdata. Returns None if missing.
         ParticipantData contains all 'useful' player statistics like kills."""
     return data.get('participants')

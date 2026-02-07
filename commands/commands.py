@@ -2,11 +2,11 @@
 from discord import app_commands
 import discord
 
-from helpers.riot_helpers import validate_region, get_puuid_and_match_id
-from helpers.discord_helpers import validate_user, get_guild_from_interaction
+from riot.service import validate_region, get_puuid_and_match_id
+from utils.discord import validate_user, get_guild_from_interaction
 from track_manager.track_data import TrackManager
-
 from commands.embeds import *
+from main import http_session
 
 # ========== Command Registry ==========
 def register_commands(tree, track: TrackManager):
@@ -19,13 +19,16 @@ def register_commands(tree, track: TrackManager):
         riot_name: str,
         region: str,
     ):
-
+        if http_session is None:
+            await interaction.response.send_message("Bot is not ready yet.", ephemeral=True)
+            return
+        
         region = region.upper()
         if not validate_region(region):
             await interaction.response.send_message("Invalid region.", ephemeral=True)
             return
             
-        puuid, match_id = await get_puuid_and_match_id(riot_name, region)
+        puuid, match_id = await get_puuid_and_match_id(riot_name, region, http_session)
         if not puuid or not match_id:
             await interaction.response.send_message("Invalid Riot name or failed to fetch player data.", ephemeral=True)
             return

@@ -4,6 +4,8 @@ import dotenv
 import discord
 import aiohttp
 
+dotenv.load_dotenv()
+
 from discord import app_commands
 from commands.commands import register_commands
 from commands.errors import register_errors
@@ -12,8 +14,6 @@ from tracking.storage import TrackManager
 track = TrackManager()
 
 # ========== Setup ==========
-dotenv.load_dotenv()
-
 intents = discord.Intents.default()
 intents.message_content = True
 client = discord.Client(intents=intents)

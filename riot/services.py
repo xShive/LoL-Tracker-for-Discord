@@ -10,7 +10,10 @@ def split_riot_name(riot_name: str) -> Optional[Tuple[str, str]]:
     """Returns a tuple with the username and the tag. Returns None if username is invalid."""
     if "#" not in riot_name:
         return None
-    return (riot_name.split("#")[0], riot_name.split("#")[1])
+
+    # split only once in case the name contains additional '#'
+    game_name, tag = riot_name.split("#", 1)
+    return game_name, tag
 
 
 def validate_region(region: str) -> bool:
@@ -30,6 +33,7 @@ async def get_puuid_and_match_id(
         return None, None
 
     game_name, tag = parsed
+    region = region.upper()
 
     puuid = await get_puuid(game_name, tag, region, session)
     if not puuid:

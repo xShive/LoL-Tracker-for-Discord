@@ -62,7 +62,7 @@ async def on_guild_remove(guild: discord.Guild):
     track.save()
 
 @client.event
-async def on_close():
+async def on_disconnect():
     if http_session:
         await http_session.close()
 

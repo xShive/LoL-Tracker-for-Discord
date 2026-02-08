@@ -1,6 +1,5 @@
 # ========== Imports ==========
 import os
-import dotenv
 import aiohttp
 
 from typing import Optional
@@ -8,15 +7,11 @@ from riot.riot_types import MatchData
 
 
 # ========== Configuration ==========
-# we request data from riot. riot looks at headers to check for access.
-# riot looks for "X-Riot-Token"
-dotenv.load_dotenv()
-RIOT_TOKEN = os.getenv("RIOT_TOKEN")
-if RIOT_TOKEN is None: raise ValueError("RIOT_TOKEN not found in .env file.")
-
-HEADERS = {
-    "X-Riot-Token" : RIOT_TOKEN
-}
+def _get_headers() -> dict:
+    token = os.getenv("RIOT_TOKEN")
+    if not token:
+        raise RuntimeError("RIOT_TOKEN not set in environment")
+    return {"X-Riot-Token": token}
 
 RegionCode = str
 
@@ -72,7 +67,7 @@ async def get_puuid(
 
     full_url = f"{region_url}/riot/account/v1/accounts/by-riot-id/{game_name}/{tag_line}"
 
-    async with session.get(full_url, headers=HEADERS) as response:
+    async with session.get(full_url, headers=_get_headers()) as response:
         if response.status == 200:
             data = await response.json()
             return data.get("puuid")
@@ -103,7 +98,7 @@ async def get_match_id(
 
     full_url = f"{region_url}/lol/match/v5/matches/by-puuid/{puuid}/ids"
 
-    async with session.get(full_url, headers=HEADERS) as response:
+    async with session.get(full_url, headers=_get_headers()) as response:
         if response.status == 200:
             data: list[str] = await response.json()
         
@@ -138,11 +133,9 @@ async def get_match_data(
 
     full_url = f"{region_url}/lol/match/v5/matches/{match_id}"
 
-    async with aiohttp.ClientSession() as session:
-        async with session.get(full_url, headers=HEADERS) as response:
-            if response.status == 200:
-                return await response.json()
-            
-            else:
-                print(f"Error: {response.status}")
-                return None
+    async with session.get(full_url, headers=_get_headers()) as response:
+        if response.status == 200:
+            return await response.json()
+        else:
+            print(f"Error: {response.status}")
+            return None

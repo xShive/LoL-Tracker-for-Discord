@@ -1,21 +1,27 @@
+# ========== Imports ==========
 import discord
+from tracking import models
 
-from track_manager.track_data import User
 
-async def All_User_embed(interaction: discord.Interaction, guild_id: int, user_list: list[User]):
-    text = ""
-    for user in user_list:
-        if not interaction.guild:
-            return
-        
-        member = interaction.guild.get_member(int(user.discord_id))
-        name = member.display_name if member else user.discord_id
-
-    guild_name = interaction.client.get_guild(guild_id)
+# ========== Functions6 ==========
+async def show_tracking_info(
+        interaction: discord.Interaction,
+        tracked_users_list: list[models.User],
+) -> discord.Embed:
+    
+    guild_name = interaction.guild.name if interaction.guild else "Unknown server"
+    
     embed = discord.Embed(
-        title=f"All Users in {guild_name}",
-        description= text,
+        title=f"🎯 There are currently {len(tracked_users_list)} users being tracked in {guild_name}:",
         color= discord.Color.gold()
     )
 
+    for tracked_user in tracked_users_list:
+        username = (await interaction.client.fetch_user(int(tracked_user.discord_id))).name
+        embed.add_field(
+            name=username,
+            value=f"Discord ID: {tracked_user.discord_id}\nPUUID: {tracked_user.puuid}\nRegion: {tracked_user.region}",
+            inline=False
+        )
+    
     return embed

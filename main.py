@@ -18,12 +18,9 @@ intents = discord.Intents.default()
 intents.message_content = True
 client = discord.Client(intents=intents)
 
-tree = app_commands.CommandTree(client)
-register_commands(tree, track)
-register_errors(tree)
-
-# None because at import time bot isnt connected
 http_session: aiohttp.ClientSession | None = None
+
+tree = app_commands.CommandTree(client)
 
 
 # ========== Startup ==========
@@ -35,6 +32,14 @@ if token is None:
 async def on_ready():
     print(f"Logged in as {client.user}")
 
+    # open http_session
+    global http_session
+    if http_session is None:
+        http_session = aiohttp.ClientSession()
+
+    register_commands(tree, track, http_session)
+    register_errors(tree)
+    
     # sync with test server
     MY_GUILD = discord.Object(id=1461904966212911297)
     tree.copy_global_to(guild=MY_GUILD)
@@ -42,13 +47,8 @@ async def on_ready():
 
     # sync all joined guilds
     async for guild in client.fetch_guilds():
-        if not track.get_guild(guild.id):
-            track.add_guild(guild.id)
-            track.save()
-    
-    # open http_session
-    global http_session
-    http_session = aiohttp.ClientSession()
+        track.add_guild(guild.id)
+    track.save()
 
 
 @client.event
@@ -66,4 +66,5 @@ async def on_close():
     if http_session:
         await http_session.close()
 
-client.run(token)
+if __name__ == "__main__":
+    client.run(token)

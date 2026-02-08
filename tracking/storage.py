@@ -7,7 +7,7 @@ from tracking.models import Guild
 
 
 # ========== Constants ==========
-FILE = "track_manager/track.json"
+FILE = "tracking/track.json"
 
 
 # ========== Class TrackManager ==========
@@ -33,7 +33,14 @@ class TrackManager:
             return {"guilds": {}}
 
         with open(self.path, "r") as f:
-            return json.load(f)
+            data = json.load(f)
+        
+        # Ensure "guilds" key exists
+        if "guilds" not in data or not isinstance(data["guilds"], dict):
+            data["guilds"] = {}
+        
+        return data
+
     
     def save(self):
         """Saves the changes made to the json file.
@@ -42,11 +49,14 @@ class TrackManager:
             json.dump(self.data, f, indent=4)
     
     def get_guild(self, guild_id: int) -> Optional[Guild]:
-        guild = self.data["guilds"].get(str(guild_id))
-        if not guild:
-            return None
-        
-        return Guild(str(guild_id), guild) if not guild else None
+        """Returns Guild loaded from the json if it exists, else None"""
+        guild_data = self.data["guilds"].get(str(guild_id))
+        if guild_data is None:
+            guild_data = {"users": {}}
+            self.data[str(guild_id)][str(guild_id)] = guild_data
+
+        return Guild(str(guild_id), guild_data)
+
 
     def add_guild(self, guild_id: int):
         """Adds a discord Guild to the track.json. Needs its ID.

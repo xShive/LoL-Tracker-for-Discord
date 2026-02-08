@@ -1,15 +1,20 @@
 # ========== Imports ==========
-from discord import app_commands
 import discord
 
-from riot.service import validate_region, get_puuid_and_match_id
+from discord import app_commands
+from typing import Optional
+from aiohttp import ClientSession
+
+from riot.services import validate_region, get_puuid_and_match_id
 from utils.discord import validate_user, get_guild_from_interaction
-from track_manager.track_data import TrackManager
-from commands.embeds import *
-from main import http_session
+from tracking.storage import TrackManager
+from embeds.embeds import show_tracking_info
 
 # ========== Command Registry ==========
-def register_commands(tree, track: TrackManager):
+def register_commands(
+        tree: discord.app_commands.CommandTree,
+        track: TrackManager,
+        http_session: Optional[ClientSession]):
 
     @tree.command(name="add_user", description="Adds a user to the list ~dev-only")
     @app_commands.check(validate_user)
@@ -37,12 +42,12 @@ def register_commands(tree, track: TrackManager):
         if not guild:
             await interaction.response.send_message("This command must be used in a server.", ephemeral=True)
             return
-
+        
         user = guild.add_member(discord_user.id, puuid, region)
         if not user:
             await interaction.response.send_message(f"User {discord_user.id} already exists.", ephemeral=True)
             return
-
+        
         user.puuid = puuid
         user.matches = match_id
 
@@ -78,6 +83,7 @@ def register_commands(tree, track: TrackManager):
             return
 
         user_list = guild.get_all_members()
+        embed = await show_tracking_info(interaction, user_list)
         
-        await interaction.response.send_message(embed= await All_User_embed(interaction, int(guild.guild_id), user_list))
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 

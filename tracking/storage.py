@@ -45,17 +45,23 @@ class TrackManager:
     def save(self):
         """Saves the changes made to the json file.
         """
+        # Ensure directory exists
+        dirname = os.path.dirname(self.path)
+        if dirname:
+            os.makedirs(dirname, exist_ok=True)
+
         with open(self.path, 'w') as f:
             json.dump(self.data, f, indent=4)
     
     def get_guild(self, guild_id: int) -> Optional[Guild]:
         """Returns Guild loaded from the json if it exists, else None"""
-        guild_data = self.data["guilds"].get(str(guild_id))
+        key = str(guild_id)
+        guild_data = self.data["guilds"].get(key)
         if guild_data is None:
             guild_data = {"users": {}}
-            self.data[str(guild_id)][str(guild_id)] = guild_data
+            self.data["guilds"][key] = guild_data
 
-        return Guild(str(guild_id), guild_data)
+        return Guild(key, guild_data)
 
 
     def add_guild(self, guild_id: int):

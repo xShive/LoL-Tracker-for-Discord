@@ -1,10 +1,11 @@
 # ========== Imports ==========
 import os
 import dotenv
-import discord
-import aiohttp
 
 dotenv.load_dotenv()
+
+import discord
+import aiohttp
 
 from discord import app_commands
 from commands.commands import register_commands
@@ -63,8 +64,10 @@ async def on_guild_remove(guild: discord.Guild):
 
 @client.event
 async def on_disconnect():
-    if http_session:
+    global http_session
+    if http_session and not http_session.closed:
         await http_session.close()
+        http_session = None
 
 if __name__ == "__main__":
     client.run(token)

@@ -19,6 +19,4 @@ def get_guild_from_interaction(interaction: discord.Interaction, track: TrackMan
 
 async def validate_user(interaction: discord.Interaction) -> bool:
     """Checks if the user is allowed to use the following command, this means its part of the env file"""
-    if not DEV_IDS:
-        return False
-    return interaction.user.id in DEV_IDS
+    return bool(DEV_IDS and interaction.user.id in DEV_IDS)

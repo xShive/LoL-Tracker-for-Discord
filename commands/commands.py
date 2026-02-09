@@ -11,7 +11,7 @@ from utils.discord import validate_user, get_guild_from_interaction
 from tracking.storage import TrackManager
 
 from embeds.embeds import show_tracking_info
-from services.match_service import generate_image
+from services.match_service import generate_image_by_type
 
 # ========== Command Registry ==========
 def register_commands(
@@ -91,31 +91,42 @@ def register_commands(
         interaction: discord.Interaction,
         discord_user: discord.User,
     ):
+        await interaction.response.defer()
+
         guild = get_guild_from_interaction(interaction, track)
         if not guild:
-            await interaction.response.send_message("This Discord server isn't being tracked.")
+            await interaction.edit_original_response(content="This Discord server isn't being tracked.")
             return
 
         tracked_user = guild.get_member(discord_user.id)
         if not tracked_user:
-            await interaction.response.send_message("This user isn't being tracked. Add them by doing /add_user.")
+            await interaction.edit_original_response(content="This user isn't being tracked. Add them by doing /add_user.")
             return
         
         if not tracked_user.recent_match:
-            await interaction.response.send_message("This user has not played any matches.")
+            await interaction.edit_original_response(content="This user has not played any matches.")
             return
 
         match_data = await get_match_data(tracked_user.recent_match, tracked_user.region, http_session)
         if not match_data:
-            await interaction.response.send_message("Something went wrong while fetching data. Ask Shive to check the server's terminal for a fix.")
+            await interaction.edit_original_response(content="Something went wrong while fetching data. Ask Shive to check the server's terminal for a fix.")
             return
 
-        image = await generate_image("overview", tracked_user, match_data)
+        image = await generate_image_by_type("overview", tracked_user, match_data)
         if not image:
-            await interaction.response.send_message("Something went wrong while generating the image.")
+            await interaction.edit_original_response(content="Something went wrong while generating the image.")
             return
         
-        await interaction.response.send_message(file=image)
+        channel_id = interaction.channel_id
+        if channel_id is None:
+            await interaction.edit_original_response(content="Can't send the image here.")
+            return
         
+        channel = await interaction.client.fetch_channel(channel_id)
+        if not isinstance(channel, discord.abc.Messageable):
+            await interaction.edit_original_response(content="Can't send the image here.")
+            return
+        
+        await channel.send(file=image)
 
-
+        

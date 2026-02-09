@@ -225,7 +225,7 @@ class MissionData(TypedDict):
 # large participant data fields
 # total = False so that it doesn't break if Riot changes things
 
-class ParticipantData(TypedDict, total=False):
+class ParticipantData(TypedDict):
     allInPings: int
     assistMePings: int
     assists: int

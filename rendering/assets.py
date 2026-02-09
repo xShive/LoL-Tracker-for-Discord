@@ -6,7 +6,8 @@ from io import BytesIO
 from typing import Optional
 import os
 
-DDRAGON_URL_TEMPLATE = "https://ddragon.leagueoflegends.com/cdn/"
+DRAGON_URL = "https://ddragon.leagueoflegends.com/cdn/"
+RANK_ICON_URL = "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-"
 CACHE_DIR = "rendering/assets/cache/"
 VERSION = "16.3.1"
 
@@ -41,14 +42,18 @@ def _check_cache(identity: str | int, category: str) -> Optional[Image.Image]:
 
 async def get_image(identity: str | int, category: str) -> Optional[Image.Image]:
     # identity = Ahri, DrMundo, 4132, Exhaust, ...
-    # category = champion, item, rune, spell (passed by user)
+    # category = champion, item, rune, spell, rank (passed by user)
 
     cached = _check_cache(identity, category)
     if cached:
         return cached
 
     print("not cached")
-    url = DDRAGON_URL_TEMPLATE + f"{VERSION}/img/{category}/{identity}.png"
+    if category == "rank":
+        url = RANK_ICON_URL + f"{identity}.png"
+    else:
+        url = DRAGON_URL + f"{VERSION}/img/{category}/{identity}.png"
+        
     img_bytes = await _fetch_image(url)
     if img_bytes is None:
         return None

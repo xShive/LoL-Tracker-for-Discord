@@ -3,7 +3,7 @@ import os
 import aiohttp
 
 from typing import Optional
-from riot.riot_types import MatchData
+from riot.riot_types import MatchData, RankData
 
 
 # ========== Configuration ==========
@@ -132,6 +132,66 @@ async def get_match_data(
         return None
 
     full_url = f"{region_url}/lol/match/v5/matches/{match_id}"
+
+    async with session.get(full_url, headers=_get_headers()) as response:
+        if response.status == 200:
+            return await response.json()
+        else:
+            print(f"Error: {response.status}")
+            return None
+    
+
+async def get_summoner_id(
+    puuid: str,
+    region: RegionCode,
+    session: aiohttp.ClientSession
+) -> Optional[str]:
+    """Retrieves summoner ID from PUUID and region.
+
+    Args:
+        puuid (str): The user's PUUID
+        region (RegionCode): Region code in which the user resides.
+        session (aiohttp.ClientSession): HTTP session for making requests.
+
+    Returns:
+        Optional[str]: The corresponding summoner ID or None if error.
+    """
+    region_url = REGIONS.get(region)
+    if not region_url:
+        return None
+
+    full_url = f"{region_url}/lol/summoner/v4/summoners/by-puuid/{puuid}"
+
+    async with session.get(full_url, headers=_get_headers()) as response:
+        if response.status == 200:
+            data = await response.json()
+            return data.get("id")
+        else:
+            print(f"Error: {response.status}")
+            return None
+
+
+async def get_rank_data(
+    summoner_id: str,
+    region: RegionCode,
+    session: aiohttp.ClientSession
+) -> Optional[list[RankData]]:
+    """Retrieves all rank entries for a summoner.
+
+    Args:
+        summoner_id (str): The summoner's ID
+        region (RegionCode): Region code in which the user resides.
+        session (aiohttp.ClientSession): HTTP session for making requests.
+
+    Returns:
+        Optional[list[RankData]]: List of rank entries (Solo, Flex, etc.) or None if error.
+        Info: There are two queues: solo and flex. The list contains those two and their specific info
+    """
+    region_url = REGIONS.get(region)
+    if not region_url:
+        return None
+
+    full_url = f"{region_url}/lol/league/v4/entries/by-summoner/{summoner_id}"
 
     async with session.get(full_url, headers=_get_headers()) as response:
         if response.status == 200:

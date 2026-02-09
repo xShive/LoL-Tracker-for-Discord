@@ -2,16 +2,14 @@
 import discord
 
 from discord import app_commands
-from typing import Optional
 from aiohttp import ClientSession
 
+from services.match_service import generate_image_by_type
 from riot.api import get_match_data
 from riot.services import validate_region, get_puuid_and_match_id
 from utils.discord import validate_user, get_guild_from_interaction
 from tracking.storage import TrackManager
-
 from embeds.embeds import show_tracking_info
-from services.match_service import generate_image_by_type
 
 # ========== Command Registry ==========
 def register_commands(
@@ -112,7 +110,7 @@ def register_commands(
             await interaction.edit_original_response(content="Something went wrong while fetching data. Ask Shive to check the server's terminal for a fix.")
             return
 
-        image = await generate_image_by_type("overview", tracked_user, match_data)
+        image = await generate_image_by_type("overview", tracked_user, match_data, http_session)
         if not image:
             await interaction.edit_original_response(content="Something went wrong while generating the image.")
             return

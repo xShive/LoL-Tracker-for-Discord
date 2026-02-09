@@ -1,7 +1,9 @@
 # ========== Imports ==========
 import aiohttp
 
-from riot.api import get_puuid, get_match_id, REGIONS
+from riot.api import get_puuid, get_match_id, REGIONS, get_summoner_id, get_rank_data
+from riot.extractors import get_both_ranks
+from riot.riot_types import RankData
 from typing import Optional, Tuple
 
 
@@ -43,3 +45,23 @@ async def get_puuid_and_match_id(
         return None, None
 
     return puuid, match_id
+
+
+async def get_both_ranks_for_puuid(
+        puuid: str,
+        region: str,
+        session: aiohttp.ClientSession
+) -> Tuple[Optional[RankData], Optional[RankData]]:
+    """Fetches both Solo and Flex rank entries in a single API call.
+
+    Returns a tuple of (solo_rank, flex_rank). Each can be None if not found.
+    """
+    summoner_id = await get_summoner_id(puuid, region, session)
+    if not summoner_id:
+        return None, None
+
+    entries = await get_rank_data(summoner_id, region, session)
+    if not entries:     # check if api call failed
+        return None, None
+
+    return get_both_ranks(entries)

@@ -1,5 +1,5 @@
 # ========== Imports ==========
-from typing import Optional, List
+from typing import Optional, List, Tuple
 from riot.riot_types import *
 
 
@@ -61,3 +61,22 @@ def get_objectives_data(data: TeamData) -> Optional[ObjectivesData]:
     """Returns ObjectivesData from TeamData. May return None if missing.
         Contains team objectives like towers, dragons, barons, and inhibitors."""
     return data.get('objectives')
+
+def get_both_ranks(
+    entries: list[RankData]
+) -> Tuple[Optional[RankData], Optional[RankData]]:
+    """Extracts both Solo and Flex ranks from a list of RankData in a single pass.
+    
+    Returns a tuple of (solo_rank, flex_rank). Each can be None if not found.
+    """
+    solo_rank = None
+    flex_rank = None
+    
+    for entry in entries:
+        queue_type = entry.get("queueType")
+        if queue_type == "RANKED_SOLO_5x5":
+            solo_rank = entry
+        elif queue_type == "RANKED_FLEX_SR":
+            flex_rank = entry
+    
+    return solo_rank, flex_rank

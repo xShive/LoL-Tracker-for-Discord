@@ -13,6 +13,22 @@ Primarily used to enable autocomplete when getting specific data from the huge J
 from typing import TypedDict, List
 
 
+# ========== Rank Data ==========
+class RankData(TypedDict):
+    leagueId: str
+    puuid: str
+    queueType: str
+    tier: str
+    rank: str
+    leaguePoints: int
+    wins: int
+    losses: int
+    hotStreak: bool
+    veteran: bool
+    freshBlood: bool
+    inactive: bool
+
+
 # ========== Perks Wrappers ==========
 class PerkStatData(TypedDict):
     defense: int

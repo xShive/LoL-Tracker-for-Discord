@@ -20,18 +20,16 @@ VERSION = "16.3.1"
 
 """TODO: fix linux"""
 
-async def _fetch_image(url_to_fetch: str) -> Optional[BytesIO]:
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url_to_fetch) as response:
-                if response.status == 200:
-                    content = await response.read()
-                    return BytesIO(content)
-        return None
+async def _fetch_image(
+        url_to_fetch: str,
+        session: aiohttp.ClientSession
+) -> Optional[BytesIO]:
+    async with session.get(url_to_fetch) as response:
+        if response.status == 200:
+            content = await response.read()
+            return BytesIO(content)
+    return None
     
-    except Exception as e:
-        print(f"Error fetching image from {url_to_fetch}: {e}")
-        return None
 
 
 def _check_cache(identity: str | int, category: str) -> Optional[Image.Image]:
@@ -40,7 +38,10 @@ def _check_cache(identity: str | int, category: str) -> Optional[Image.Image]:
     return None
 
 
-async def get_image(identity: str | int, category: str) -> Optional[Image.Image]:
+async def get_image(identity: str | int,
+                    category: str,
+                    session: aiohttp.ClientSession
+            ) -> Optional[Image.Image]:
     # identity = Ahri, DrMundo, 4132, Exhaust, ...
     # category = champion, item, rune, spell, rank (passed by user)
 
@@ -54,7 +55,7 @@ async def get_image(identity: str | int, category: str) -> Optional[Image.Image]
     else:
         url = DRAGON_URL + f"{VERSION}/img/{category}/{identity}.png"
         
-    img_bytes = await _fetch_image(url)
+    img_bytes = await _fetch_image(url, session)
     if img_bytes is None:
         return None
     

@@ -1,7 +1,7 @@
 # ========== Imports ==========
 import aiohttp
 
-from riot.api import get_puuid, get_match_id, REGIONS, get_summoner_id, get_rank_data
+from riot.api import get_puuid, get_match_id, REGIONS_ROUTING, get_rank_data
 from riot.extractors import get_both_ranks
 from riot.riot_types import RankData
 from typing import Optional, Tuple
@@ -20,7 +20,7 @@ def split_riot_name(riot_name: str) -> Optional[Tuple[str, str]]:
 def validate_region(region: str) -> bool:
     """Returns True if the region is valid, else False."""
     region = region.upper()
-    return True if region in REGIONS else False
+    return True if region in REGIONS_ROUTING else False
 
 
 async def get_puuid_and_match_id(
@@ -51,17 +51,16 @@ async def get_both_ranks_for_puuid(
         puuid: str,
         region: str,
         session: aiohttp.ClientSession
-) -> Tuple[Optional[RankData], Optional[RankData]]:
+) -> Tuple[Optional[RankData], Optional[RankData], str]:
     """Fetches both Solo and Flex rank entries in a single API call.
 
     Returns a tuple of (solo_rank, flex_rank). Each can be None if not found.
     """
-    summoner_id = await get_summoner_id(puuid, region, session)
-    if not summoner_id:
-        return None, None
+    entries, status = await get_rank_data(puuid, region, session)
 
-    entries = await get_rank_data(summoner_id, region, session)
-    if not entries:     # check if api call failed
-        return None, None
+    if status != "ok":
+        return None, None, status
 
-    return get_both_ranks(entries)
+    solo_rank, flex_rank = get_both_ranks(entries)
+    return solo_rank, flex_rank, "ok"
+

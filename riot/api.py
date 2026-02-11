@@ -2,7 +2,7 @@
 import os
 import aiohttp
 
-from typing import Optional
+from typing import Optional, Tuple
 from riot.riot_types import MatchData, RankData
 
 
@@ -15,14 +15,16 @@ def _get_headers() -> dict:
 
 RegionCode = str
 
-REGIONS = {
+# MatchV5 and AccountV1
+# from here: https://eloking.com/blog/league-of-legends-all-server-location
+REGIONS_ROUTING = {
     # AMERICAS
     "NA": "https://americas.api.riotgames.com",
     "BR": "https://americas.api.riotgames.com",
     "LAN": "https://americas.api.riotgames.com",
     "LAS": "https://americas.api.riotgames.com",
     "OCE": "https://americas.api.riotgames.com",
-    "PBE": "https://americas.api.riotgames.com",
+    "PBE": "https://americas.api.riotgames.com",       # public beta environment, not in platforms
 
     # EUROPES
     "EUW": "https://europe.api.riotgames.com",
@@ -34,7 +36,7 @@ REGIONS = {
     "KR": "https://asia.api.riotgames.com",
     "JP": "https://asia.api.riotgames.com",
 
-    # RANDOMS ASIA
+    # SEA
     "PH": "https://sea.api.riotgames.com",
     "SG": "https://sea.api.riotgames.com",
     "TW": "https://sea.api.riotgames.com",
@@ -42,6 +44,33 @@ REGIONS = {
     "VN": "https://sea.api.riotgames.com",
 }
 
+
+# SummonerV4 and LeagueV4
+PLATFORM_ROUTING = {
+    # AMERICAS
+    "NA": "https://na1.api.riotgames.com",
+    "BR": "https://br1.api.riotgames.com",
+    "LAN": "https://la1.api.riotgames.com",
+    "LAS": "https://la2.api.riotgames.com",
+    "OCE": "https://oc1.api.riotgames.com",
+    
+    # EUROPE
+    "EUW": "https://euw1.api.riotgames.com",
+    "EUNE": "https://eun1.api.riotgames.com",
+    "TR": "https://tr1.api.riotgames.com",
+    "RU": "https://ru.api.riotgames.com",
+    
+    # ASIA
+    "KR": "https://kr.api.riotgames.com",
+    "JP": "https://jp1.api.riotgames.com",
+
+    # SEA
+    "PH": "https://ph2.api.riotgames.com",
+    "SG": "https://sg2.api.riotgames.com",
+    "TH": "https://th2.api.riotgames.com",
+    "TW": "https://tw2.api.riotgames.com",
+    "VN": "https://vn2.api.riotgames.com",
+}
 
 # ========== Functions ==========
 async def get_puuid(
@@ -61,7 +90,7 @@ async def get_puuid(
         Optional[str]: The corresponding PUUID or None if error.
     """
 
-    region_url = REGIONS.get(region_code)
+    region_url = REGIONS_ROUTING.get(region_code)
     if region_url is None:
         return None
 
@@ -92,7 +121,7 @@ async def get_match_id(
         Optional[str]: The corresponding match ID or None if error.
     """
     
-    region_url = REGIONS.get(region)
+    region_url = REGIONS_ROUTING.get(region)
     if region_url is None:
         return None
 
@@ -127,7 +156,7 @@ async def get_match_data(
         Optional[MatchData]: The raw response .json sent by riot. None if error.
     """
 
-    region_url = REGIONS.get(region)
+    region_url = REGIONS_ROUTING.get(region)
     if region_url is None:
         return None
 
@@ -141,41 +170,11 @@ async def get_match_data(
             return None
     
 
-async def get_summoner_id(
+async def get_rank_data(
     puuid: str,
     region: RegionCode,
     session: aiohttp.ClientSession
-) -> Optional[str]:
-    """Retrieves summoner ID from PUUID and region.
-
-    Args:
-        puuid (str): The user's PUUID
-        region (RegionCode): Region code in which the user resides.
-        session (aiohttp.ClientSession): HTTP session for making requests.
-
-    Returns:
-        Optional[str]: The corresponding summoner ID or None if error.
-    """
-    region_url = REGIONS.get(region)
-    if not region_url:
-        return None
-
-    full_url = f"{region_url}/lol/summoner/v4/summoners/by-puuid/{puuid}"
-
-    async with session.get(full_url, headers=_get_headers()) as response:
-        if response.status == 200:
-            data = await response.json()
-            return data.get("id")
-        else:
-            print(f"Error: {response.status}")
-            return None
-
-
-async def get_rank_data(
-    summoner_id: str,
-    region: RegionCode,
-    session: aiohttp.ClientSession
-) -> Optional[list[RankData]]:
+) -> Tuple[list[RankData], str]:
     """Retrieves all rank entries for a summoner.
 
     Args:
@@ -187,15 +186,20 @@ async def get_rank_data(
         Optional[list[RankData]]: List of rank entries (Solo, Flex, etc.) or None if error.
         Info: There are two queues: solo and flex. The list contains those two and their specific info
     """
-    region_url = REGIONS.get(region)
-    if not region_url:
-        return None
+    platform_url = PLATFORM_ROUTING.get(region)
+    if not platform_url:
+        return [], "error"
 
-    full_url = f"{region_url}/lol/league/v4/entries/by-summoner/{summoner_id}"
+    full_url = f"{platform_url}/lol/league/v4/entries/by-puuid/{puuid}"
 
     async with session.get(full_url, headers=_get_headers()) as response:
         if response.status == 200:
-            return await response.json()
+            data = await response.json()
+            return data or [], "ok"
+        
+        elif response.status == 403:
+            return [], "unfetchable"
+        
         else:
             print(f"Error: {response.status}")
-            return None
+            return [], "error"

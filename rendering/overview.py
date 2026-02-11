@@ -35,7 +35,7 @@ async def generate_overview_image(tracked_user: User, match_data: MatchData, ses
     # 3. Fetch all champion images
     y = 160
     for i, participant in enumerate(participants):
-        champ_img = await get_image(participant["championName"], "champion")
+        champ_img = await get_image(participant["championName"], "champion", session)
         if not champ_img:
             return
 
@@ -48,25 +48,35 @@ async def generate_overview_image(tracked_user: User, match_data: MatchData, ses
 
     # 4. Fetch and draw ranks for each participant
     for i, participant in enumerate(participants):
-        solo_rank, flex_rank = await get_both_ranks_for_puuid(participant["puuid"], tracked_user.region, session)
+        solo_rank, flex_rank, status = await get_both_ranks_for_puuid(
+            participant["puuid"], tracked_user.region, session
+        )
 
-        # Prepare solo rank text
-        if solo_rank:
-            tier = solo_rank.get("tier", "")
-            rank_label = solo_rank.get("rank", "")
-            lp = solo_rank.get("leaguePoints", "")
-            solo_text = f"Solo: {tier} {rank_label} {lp}LP"
-        else:
-            solo_text = "Solo: Unranked"
+        if status == "unfetchable":
+            solo_text = flex_text = "Not Fetchable"
+        elif status == "error":
+            solo_text = flex_text = "Error"
+        else:  # status == "ok"
+            # Prepare solo rank text
+            if solo_rank:
+                tier = solo_rank.get("tier", "")
+                rank_label = solo_rank.get("rank", "")
+                lp = solo_rank.get("leaguePoints", "")
+                solo_text = f"Solo: {tier} {rank_label} {lp}LP"
+            else:
+                solo_text = "Solo: Unranked"
 
-        # Prepare flex rank text
-        if flex_rank:
-            tier = flex_rank.get("tier", "")
-            rank_label = flex_rank.get("rank", "")
-            lp = flex_rank.get("leaguePoints", "")
-            flex_text = f"Flex: {tier} {rank_label} {lp}LP"
-        else:
-            flex_text = "Flex: Unranked"
+            # Prepare flex rank text
+            if flex_rank:
+                tier = flex_rank.get("tier", "")
+                rank_label = flex_rank.get("rank", "")
+                lp = flex_rank.get("leaguePoints", "")
+                flex_text = f"Flex: {tier} {rank_label} {lp}LP"
+            else:
+                flex_text = "Flex: Unranked"
+
+        print(f"Speler {i + 1}:\n{solo_text}\n{flex_text}")
+
 
     # 5. Save buffer
     buffer = BytesIO()

@@ -107,7 +107,7 @@ def register_commands(
 
         match_data = await get_match_data(tracked_user.recent_match, tracked_user.region, http_session)
         if not match_data:
-            await interaction.edit_original_response(content="Something went wrong while fetching data. Ask Shive to check the server's terminal for a fix.")
+            await interaction.edit_original_response(content="Something went wrong while fetching data.")
             return
 
         image = await generate_image_by_type("overview", tracked_user, match_data, http_session)

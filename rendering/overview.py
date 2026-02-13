@@ -3,60 +3,48 @@ import os
 
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
-from rendering.assets import get_image
+from rendering.components import ranks, champion, runes, spells
+from rendering.core.utils import draw_text_with_shadow
+from rendering.core.cache_manager import AssetCache
 from riot.extractors import get_participants
 from riot.riot_types import MatchData
 from riot.services import get_both_ranks_for_puuid
 from tracking.models import User
 import aiohttp
-
-rank_labels = {
-    "I" : 1,
-    "II" : 2,
-    "III" : 3,
-    "IV" : 4
-}
+from rendering.core.constants import RANK_LABELS, FONTS_DIR, TEMPLATES_DIR
 
 
 # ========== Functions ==========
 async def generate_overview_image(tracked_user: User, match_data: MatchData, session: aiohttp.ClientSession):
-    # 0. Folder setup
-    current_folder = os.path.dirname(__file__)
-    template_path = os.path.join(current_folder, "assets/templates/overview design.png")
-    font_path_name = os.path.join(current_folder, "assets/fonts/Sora/Sora-SemiBold.ttf")
-    font_path_rank = os.path.join(current_folder, "assets/fonts/Sora/Sora-Medium.ttf")
 
-    # 1. Open template as RGBA object (for transparency)
-    template = Image.open(template_path).convert("RGBA")
+    # 1. Images and Fonts setup
+    template = Image.open(TEMPLATES_DIR / "overview.png").convert("RGBA")
     draw = ImageDraw.Draw(template)
-    name_font = ImageFont.truetype(font_path_name, 18)
-    rank_font = ImageFont.truetype(font_path_rank, 12)
+    name_font = ImageFont.truetype(FONTS_DIR / "Sora" / "Sora-SemiBold.ttf", 18)
+    rank_font = ImageFont.truetype(FONTS_DIR / "Sora" / "Sora-Medium.ttf", 12)
+
+    cache = AssetCache()
 
     # 2. Extract match info and participants
     participants = get_participants(match_data)
 
-    # 3. Fetch all champion images
-    y = 139
+    # 3. raw all chanpions
+    champions_positions = []
     for i, participant in enumerate(participants):
-        champ_img = await get_image(participant["championName"], "champion", session)
-        if not champ_img:
-            return
- 
-        champ_img_circle = _crop_to_circle(champ_img)
-        template.paste(champ_img_circle, ((109 if i < 5 else 1730), y + ((i if i < 5 else i - 5) * 190)), champ_img_circle)
-    
-    # 4. Fetch all names
+        x = 109 if i < 5 else 1730
+        y = 139 + ((i if i < 5 else i - 5) * 190)
+        champions_positions.append((participant["championName"], x, y))
+
+    await champion.draw_multiple_champions(template, champions_positions, session, cache)
+
+    # 4.Draw all names
     y = 142
     for i, participant in enumerate(participants):
+        x = 190 if i < 5 else 1730
+        y = 142 + ((i if i < 5 else i - 5) * 190)
         player_name = participant["riotIdGameName"]
 
-        draw_text_with_shadow(
-            draw,
-            ((190 if i < 5 else 1730), y + (i if i < 5 else i - 5) * 190),
-            player_name,
-            name_font,
-            anchor="ra" if (i >= 5) else "la"
-        )
+        draw_text_with_shadow(draw, (x, y), player_name, name_font, anchor=("la" if i < 5 else "ra"))
 
         
     # 5. Fetch and draw ranks for each participant

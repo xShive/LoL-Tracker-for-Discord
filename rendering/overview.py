@@ -16,193 +16,106 @@ from rendering.core.constants import RANK_LABELS, FONTS_DIR, TEMPLATES_DIR
 
 # ========== Functions ==========
 async def generate_overview_image(tracked_user: User, match_data: MatchData, session: aiohttp.ClientSession):
-
-    # 1. Images and Fonts setup
+    # Setup
     template = Image.open(TEMPLATES_DIR / "overview.png").convert("RGBA")
     draw = ImageDraw.Draw(template)
-    name_font = ImageFont.truetype(FONTS_DIR / "Sora" / "Sora-SemiBold.ttf", 18)
-    rank_font = ImageFont.truetype(FONTS_DIR / "Sora" / "Sora-Medium.ttf", 12)
-
+    name_font = ImageFont.truetype(str(FONTS_DIR / "Sora" / "Sora-SemiBold.ttf"), 18)
+    rank_font = ImageFont.truetype(str(FONTS_DIR / "Sora" / "Sora-Medium.ttf"), 12)
     cache = AssetCache()
-
-    # 2. Extract match info and participants
+    
     participants = get_participants(match_data)
-
-    # 3. raw all chanpions
+    
+    # ===== SINGLE LOOP - Collect all data =====
     champions_positions = []
-    for i, participant in enumerate(participants):
-        x = 109 if i < 5 else 1730
-        y = 139 + ((i if i < 5 else i - 5) * 190)
-        champions_positions.append((participant["championName"], x, y))
-
-    await champion.draw_multiple_champions(template, champions_positions, session, cache)
-
-    # 4.Draw all names
-    y = 142
-    for i, participant in enumerate(participants):
-        x = 190 if i < 5 else 1730
-        y = 142 + ((i if i < 5 else i - 5) * 190)
-        player_name = participant["riotIdGameName"]
-
-        draw_text_with_shadow(draw, (x, y), player_name, name_font, anchor=("la" if i < 5 else "ra"))
-
-        
-    # 5. Fetch and draw ranks for each participant
-    # Starting positions
-    for i, participant in enumerate(participants):
-        solo_rank, flex_rank, status = await get_both_ranks_for_puuid(participant["puuid"], tracked_user.region, session)
-
-        # Check which side
-        is_right = i >= 5
-
-        # Prepare text and images
-        if status == "unfetchable":
-            solo_text = flex_text = "Not Fetchable"
-            rank_img_solo = rank_img_flex = None
-        elif status == "error":
-            solo_text = flex_text = "Error"
-            rank_img_solo = rank_img_flex = None
-        else:
-            # Solo
-            if solo_rank:
-                tier = solo_rank.get("tier", "")
-                rank_label = solo_rank.get("rank", "")
-                lp = solo_rank.get("leaguePoints", "")
-                solo_text = f"{tier[0]}{rank_labels[rank_label]} · {lp}LP"
-                rank_img_solo = await get_image(tier.lower(), "rank", session)
-            else:
-                solo_text = "Unranked"
-                rank_img_solo = None
-
-            # Flex
-            if flex_rank:
-                tier = flex_rank.get("tier", "")
-                rank_label = flex_rank.get("rank", "")
-                lp = flex_rank.get("leaguePoints", "")
-                flex_text = f"{tier[0]}{rank_labels[rank_label]} · {lp}LP"
-                rank_img_flex = await get_image(tier.lower(), "rank", session)
-            else:
-                flex_text = "Unranked"
-                rank_img_flex = None
-
-        if not is_right:
-            # If user has rank
-            if rank_img_solo:
-                icon_resized = rank_img_solo.resize((128, 72))
-                template.paste(icon_resized, (140, 140 + i * 190), icon_resized)
-                draw_text_with_shadow(draw, (220, 168 + i * 190), solo_text, rank_font)
-
-            # Else Unranked / Unfetchable
-            else:
-                draw_text_with_shadow(draw, (192, 168 + i * 190), solo_text, rank_font)
-            
-            if rank_img_flex:
-                icon_resized = rank_img_flex.resize((128, 72))
-                template.paste(icon_resized, (140, 160 + i * 190), icon_resized)
-                draw_text_with_shadow(draw, (220, 188 + i * 190), flex_text, rank_font)
-
-            else:
-                draw_text_with_shadow(draw, (192, 188 + i * 190), flex_text, rank_font)
-        
-        else:
-            row = (i - 5) * 190     # reset index
-
-            # If user has rank
-            if rank_img_solo:
-                icon_resized = rank_img_solo.resize((128, 72))
-                template.paste(icon_resized, (1652, 140 + row), icon_resized)
-                draw_text_with_shadow(draw, (1698, 168 + row), solo_text, rank_font, anchor="ra")
-
-            # Else Unranked / Unfetchable
-            else:
-                draw_text_with_shadow(draw, (1728, 168 + row), solo_text, rank_font, anchor="ra")
-
-            if rank_img_flex:
-                icon_resized = rank_img_flex.resize((128, 72))
-                template.paste(icon_resized, (1652, 160 + row), icon_resized)
-                draw_text_with_shadow(draw, (1698, 188 + row), flex_text, rank_font, anchor="ra")
-
-            else:
-                draw_text_with_shadow(draw, (1728, 188 + row), flex_text, rank_font, anchor="ra")
-        
-
-
-    RUNE_SPELL_SIZE = 30
-    RUNE_SPELL_GAP = 4    # Space between the two runes
-
-    for i, participant in enumerate(participants):
-        # a) prepare data
-        perks = participant["perks"]["styles"]
-        styles_map = {style["description"]: style for style in perks}
-        primary_style = styles_map["primaryStyle"]
-        sub_style = styles_map["subStyle"]
-
-        primary_rune_id = primary_style["selections"][0]["perk"]
-        secondary_style_id = sub_style["style"]
-
-        rune_img_1 = await get_image(primary_rune_id, "rune", session)
-        rune_img_2 = await get_image(secondary_style_id, "rune", session)
-        
-        if rune_img_1: rune_img_1 = rune_img_1.resize((RUNE_SPELL_SIZE, RUNE_SPELL_SIZE))
-        if rune_img_2: rune_img_2 = rune_img_2.resize((RUNE_SPELL_SIZE - 5, RUNE_SPELL_SIZE - 5))
-
-        # b) calculate position
-        # find champion position
-        champ_x = 109 if i < 5 else 1730
-        champ_y = 139 + ((i if i < 5 else i - 5) * 190)
-
-        # higher y = below champ icon
-        rune_y = champ_y + 85
-
-        # center over icon width
-        start_x = int((champ_x + 40) - ((RUNE_SPELL_SIZE * 2 + RUNE_SPELL_GAP) / 2))
-
-        # c) paste images
-        if rune_img_1:
-            template.paste(rune_img_1, (start_x, rune_y), rune_img_1)
-        
-        if rune_img_2:
-            second_rune_x = start_x + RUNE_SPELL_SIZE + RUNE_SPELL_GAP
-            template.paste(rune_img_2, (second_rune_x, rune_y + 1), rune_img_2)
-
-
-
-    y_offset = 220
+    rune_pairs = []
+    spell_pairs = []
     
     for i, participant in enumerate(participants):
-        spell1 = participant["summoner1Id"]
-        spell2 = participant["summoner2Id"] 
-
-        spell1_img = await get_image(spell1, "spell", session) 
-        spell2_img = await get_image(spell2, "spell", session)
+        # Calculate common values
+        is_right = i >= 5
+        row = i - 5 if is_right else i
+        champ_x = 1730 if is_right else 109
+        champ_y = 139 + row * 190
+        name_x = 1730 if is_right else 190
+        name_y = 142 + row * 190
         
-        # determine y position
-        row_y = y_offset + ((i if i < 5 else i - 5) * 190)
+        # Collect all champions + their positions in a tuple
+        champions_positions.append((participant["championName"], champ_x, champ_y))
+        
+        # Draw names
+        draw_text_with_shadow(
+            draw,
+            (name_x, name_y),
+            participant["riotIdGameName"],
+            name_font,
+            anchor="ra" if is_right else "la"
+        )
+        
+        #  Collect rune data
+        perks = participant["perks"]["styles"]
+        styles_map = {style["description"]: style for style in perks}
 
-        # Left side
-        if i < 5:
-            s1_x = 190
-            s2_x = 190 + RUNE_SPELL_SIZE + RUNE_SPELL_GAP
+        primary_rune_id = styles_map["primaryStyle"]["selections"][0]["perk"]
+        secondary_style_id = styles_map["subStyle"]["style"]
 
-        # Right side
+        center_x = champ_x + 40  # Center of champion icon
+        rune_y = champ_y + 85
+        rune_pairs.append((primary_rune_id, secondary_style_id, center_x, rune_y))
+        
+        # Collect spell data
+        spell1_id = participant["summoner1Id"]
+        spell2_id = participant["summoner2Id"]
+        spell_y = 220 + row * 190
+        spell_x = 190 if not is_right else (1730 - 30 - 4 - 30)
+        spell_pairs.append((spell1_id, spell2_id, spell_x, spell_y))
+    
+    # DRAW EVERYTHING
+    await champion.draw_multiple_champions(template, champions_positions, session, cache)
+    await runes.draw_multiple_rune_pairs(template, rune_pairs, session, cache)
+    await spells.draw_spell_pairs_batch(template, spell_pairs, session, cache)
+    
+    # Seperate loop for ranks
+    for i, participant in enumerate(participants):
+        solo_rank, flex_rank, status = await get_both_ranks_for_puuid(participant["puuid"], tracked_user.region, session)
+        
+        is_right = i >= 5
+        row = i - 5 if is_right else i
+        
+        # Handle error states
+        if status in ["unfetchable", "error"]:
+            error_text = "Not Fetchable" if status == "unfetchable" else "Error"
+            text_x = 1728 if is_right else 192
+            anchor = "ra" if is_right else "la"
+            draw_text_with_shadow(draw, (text_x, 168 + row * 190), error_text, rank_font, anchor=anchor)
+            draw_text_with_shadow(draw, (text_x, 188 + row * 190), error_text, rank_font, anchor=anchor)
+
         else:
-            s2_x = 1730 - RUNE_SPELL_SIZE 
-            s1_x = s2_x - RUNE_SPELL_GAP - RUNE_SPELL_SIZE
-
-        # Paste Spell 1
-        if spell1_img:
-            spell1_img = spell1_img.resize((RUNE_SPELL_SIZE, RUNE_SPELL_SIZE))
-            template.paste(spell1_img, (s1_x, row_y))
-
-        # Paste Spell 2
-        if spell2_img:
-            spell2_img = spell2_img.resize((RUNE_SPELL_SIZE, RUNE_SPELL_SIZE))
-            template.paste(spell2_img, (s2_x, row_y))
-
-        
-
-    # 5. Save buffer
+            # Draw using your rank component
+            if is_right:
+                await ranks.draw_rank_badge_with_text(
+                    template, draw, solo_rank,
+                    1652, 140 + row * 190, 1698, 168 + row * 190,
+                    session, cache, rank_font, "ra"
+                )
+                await ranks.draw_rank_badge_with_text(
+                    template, draw, flex_rank,
+                    1652, 160 + row * 190, 1698, 188 + row * 190,
+                    session, cache, rank_font, "ra"
+                )
+            else:
+                await ranks.draw_rank_badge_with_text(
+                    template, draw, solo_rank,
+                    140, 140 + row * 190, 220, 168 + row * 190,
+                    session, cache, rank_font
+                )
+                await ranks.draw_rank_badge_with_text(
+                    template, draw, flex_rank,
+                    140, 160 + row * 190, 220, 188 + row * 190,
+                    session, cache, rank_font
+                )
+    
+    # Save
     buffer = BytesIO()
-    template.save(buffer, format="png")
+    template.save(buffer, format="PNG")
     buffer.seek(0)
     return buffer

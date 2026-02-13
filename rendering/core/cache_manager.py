@@ -68,6 +68,7 @@ class AssetCache:
         """
         saving_cache_path = self.cache_dir / f"{category}_icons" / f"{identity}.png"
         if saving_cache_path.exists():
+            print("EXISTS")
             try:
                 img.save(saving_cache_path)
             except Exception as e:

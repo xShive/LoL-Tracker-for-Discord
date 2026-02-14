@@ -4,9 +4,11 @@ from typing import Optional, List, Tuple
 
 import aiohttp
 import asyncio
+import time
 from PIL import Image
 
 from .constants import (
+    ImageSizes,
     DRAGON_URL,
     RANK_ICON_URL,
     PERK_DATA_URL,
@@ -24,10 +26,11 @@ class AssetCache:
     All instances share the same cache.
     """
     
-    # Class attributes, so that cache is stored across all instances of AssetCache
-    _image_cache: dict[str, Image.Image] = {}
-    _perk_lookup: Optional[dict[int, str]] = None
-    _spell_lookup: Optional[dict[int, str]] = None
+    def __init__(self):
+        self._image_cache: dict[str, Image.Image] = {}
+        self._perk_lookup: Optional[dict[int, str]] = None
+        self._spell_lookup: Optional[dict[int, str]] = None
+        self._runtime_start: float = time.time()
     
     def get_cached_image(self, identity: str | int, category: str) -> Optional[Image.Image]:
         """
@@ -55,13 +58,22 @@ class AssetCache:
         cache_key = f"{category}:{identity}"
         self._image_cache[cache_key] = img
     
-    def get_cache_stats(self) -> Optional[dict[str, int | str]]:
-        """Get info about how much is stored in the current cache."""
+    def get_cache_stats(self) -> Optional[dict[str, int | str | float]]:
         if not self._image_cache:
             return None
         
+        total_bytes = 0
+        for img in self._image_cache.values():
+            # Calculate RAM usage
+            # RGBA has 4 slots, each 1 byte (255)
+            # multiply by width and height to get total bytes
+            total_bytes += img.size[0] * img.size[1] * 4
+            
+        total_mb = total_bytes / (1024 * 1024)
         return {
-            "images": len(self._image_cache)
+            "images": len(self._image_cache),
+            "size_mb": f"{total_mb:.2f} MB",
+            "runtime": time.time() - self._runtime_start
         }
     
 
@@ -152,7 +164,7 @@ async def _fetch_image(
     
     return None
 
-async def get_image(
+async def get_image(    
     identity: str | int,
     category: str,
     session: aiohttp.ClientSession,
@@ -207,6 +219,19 @@ async def get_image(
     
     try:
         img_pil = Image.open(img_bytes).convert("RGBA")
+        
+        # MEMORY OPTIMIZATION
+        target_size = None
+
+        if category == "rank":
+            target_size = ImageSizes.RANK_ICON
+        
+        elif category == "rune":
+            target_size = (ImageSizes.RUNE_ICON, ImageSizes.RUNE_ICON)
+            
+        if target_size:
+            img_pil = img_pil.resize(target_size, Image.Resampling.LANCZOS)
+            
         cache.save_to_cache(img_pil, original_identity, category)
         return img_pil
     
@@ -243,3 +268,6 @@ async def get_multiple_images(
     # get_image has no await yet, so it hasn't ran. asyncio.gather does them all.
     tasks = [get_image(identity, category, session, cache) for identity, category in items]
     return await asyncio.gather(*tasks, return_exceptions=False)
+
+# global cache
+global_cache = AssetCache()

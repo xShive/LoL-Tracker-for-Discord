@@ -1,6 +1,7 @@
 # ========== Imports ==========
 import discord
 from tracking import models
+from rendering.core.cache_manager import AssetCache, global_cache
 
 
 # ========== Functions ==========
@@ -13,7 +14,7 @@ async def show_tracking_info(
     
     embed = discord.Embed(
         title=f"🎯 There are currently {len(tracked_users_list)} users being tracked in {guild_name}:",
-        color= discord.Color.gold()
+        color=discord.Color.gold()
     )
 
     for tracked_user in tracked_users_list:
@@ -24,4 +25,19 @@ async def show_tracking_info(
             inline=False
         )
     
+    return embed
+
+
+def show_cache_info(stats: dict[str, int | str | float]) -> discord.Embed:
+    embed = discord.Embed(
+        title=f"📊 Cache Statistics:",
+        color=discord.Color.magenta()
+    )
+
+    for statistic in stats.keys():
+        embed.add_field(
+            name=statistic,
+            value=stats[statistic],
+            inline=False
+        )
     return embed

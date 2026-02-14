@@ -7,7 +7,7 @@ used throughout the rendering system.
 
 # ========== Imports ==========
 from pathlib import Path
-from PIL import ImageFont, Image
+from PIL import ImageFont
 
 
 # ========== API & Asset URLs ==========

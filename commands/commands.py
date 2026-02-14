@@ -9,7 +9,8 @@ from riot.api import get_match_data
 from riot.services import validate_region, get_puuid_and_match_id
 from utils.discord import validate_user, get_guild_from_interaction
 from tracking.storage import TrackManager
-from embeds.embeds import show_tracking_info
+from embeds.embeds import show_tracking_info, show_cache_info
+from rendering.core.cache_manager import global_cache
 
 # ========== Command Registry ==========
 def register_commands(
@@ -84,6 +85,18 @@ def register_commands(
         
         await interaction.response.send_message(embed=embed, ephemeral=True)
     
+    @tree.command(name="cache_stats", description="Show useful information about the current cache instance.")
+    @app_commands.check(validate_user)
+    async def cache_stats(interaction: discord.Interaction):
+        stats = global_cache.get_cache_stats()
+
+        if not stats:
+            await interaction.response.send_message(content="No assets have been cached yet.")
+            return
+        
+        embed = show_cache_info(stats)
+        await interaction.response.send_message(embed=embed)
+
     @tree.command(name="recent-match", description="Shows a recap of the most recent match a tracked user has played.")
     async def recent_match(
         interaction: discord.Interaction,

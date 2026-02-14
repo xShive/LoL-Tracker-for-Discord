@@ -13,6 +13,7 @@ from riot.services import get_both_ranks_for_puuid
 from tracking.models import User
 import aiohttp
 from rendering.core.constants import RANK_FONT, NAME_FONT, TEMPLATES_DIR
+from rendering.core.cache_manager import global_cache
 
 
 async def generate_overview_image(tracked_user: User, match_data: MatchData, session: aiohttp.ClientSession):
@@ -21,7 +22,7 @@ async def generate_overview_image(tracked_user: User, match_data: MatchData, ses
 
     template = Image.open(TEMPLATES_DIR / "overview.png")
     draw = ImageDraw.Draw(template)
-    cache = AssetCache() 
+    cache = global_cache
     participants = get_participants(match_data)
     
     # Loop: draw champs, runes, spells, names
